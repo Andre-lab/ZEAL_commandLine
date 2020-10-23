@@ -16,12 +16,11 @@ ZEAL depends on the following classes
 
 
 
-   -  **PDB.m **             Handles reading/fetching/parsing of PDB files 
+   -  **PDB.m**             Handles reading/fetching/parsing of PDB files 
    -  **molShape.m**    Generates a molecular shape function (the molecular surface by default) from PDB object data 
    -  **ZC.m**                 Handles computation of Zernike-Canterakis moments and shape reconstruction 
 
 ## Toolboxes
-
 
 ZEAL uses functions from these toolboxes which have to be installed (included in [MATLAB Runtime](https://www.mathworks.com/products/compiler/matlab-runtime.html) if ZEAL run as standalone program)
 
@@ -47,7 +46,7 @@ ZEAL uses functions from these toolboxes which have to be installed (included in
 # Input
 
 
-ZEAL can be run in two modes depending on if one or two protein structures are given as input. Protein structrues can either be given as files (`'filename.pdb'` or ` `'`filepath/filename.pdb'` if not in same directory ) or as 4-letter PDB ID codes (eg. '5MOK'). If a 5-letter PDB ID code is given (eg. '5MOKA'), then the last letter is assumed to be the chain ID ('A') that should be selected for analysis. By default, the A chain of the structure (first model if several exist) is used, excluding hydrogen atoms and any heteroatoms. If any alternate atom locations are defined, the 'A' state is selected. See the section \hyperref{H_56E64AE2}{Changing default parameters} to change what structure data should be used in the analysis.  
+ZEAL can be run in two modes depending on if one or two protein structures are given as input. Protein structrues can either be given as files (`'filename.pdb'` or ` `'`filepath/filename.pdb'` if not in same directory ) or as 4-letter PDB ID codes (eg. '5MOK'). If a 5-letter PDB ID code is given (eg. '5MOKA'), then the last letter is assumed to be the chain ID ('A') that should be selected for analysis. By default, the A chain of the structure (first model if several exist) is used, excluding hydrogen atoms and any heteroatoms. If any alternate atom locations are defined, the 'A' state is selected. See the section *Changing default parameters* to change what structure data should be used in the analysis.  
 
 
   
@@ -134,7 +133,7 @@ shapeAlignData = ZEAL('5mokA', 'rot', '2ho1A'); % -> Downloads structures and pe
 # Output
 
 
-**Single mode **The shape descriptors and ZC moments are accessed from the property `fixed.ZC.Descriptors` 
+**Single mode** The shape descriptors and ZC moments are accessed from the property `fixed.ZC.Descriptors` 
 
 
 
@@ -180,7 +179,7 @@ where the field `Values` contains the complex-valued moments, `Indiceslist` cont
   
 
 
-**Align mode **The shape descriptors and ZC moments for the rotating structure can be access as above, but from the property `rotating`  instead. The ZEAL score is accessed with
+**Align mode** The shape descriptors and ZC moments for the rotating structure can be access as above, but from the property `rotating`  instead. The ZEAL score is accessed with
 
 
 
