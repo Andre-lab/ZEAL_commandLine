@@ -38,7 +38,7 @@ classdef molShape < handle
             %
             % OPTIONAL
             % 'name':value pairs (defaults)
-            % 'Shape'           : string ('MS') {'SAS','MS','vdw','electron_density'}
+            % 'FunctionType'           : string ('MS') {'SAS','MS','vdw','electron_density'}
             % 'GridRes'         : integer (64)
             % 'ProbeRadius'     : double (1.4)
             % 'SmearFactor'     : double (0.3)
@@ -60,7 +60,7 @@ classdef molShape < handle
             addRequired(p, 'pdbStruct', @(x)validateattributes(x,{'struct'}, {'nonempty'}, 'pdbStruct'));
             
             % Set optional input
-            addOptional(p, 'Shape', defaultShape, @(x) any(validatestring(x,expectedShapes)));
+            addOptional(p, 'FunctionType', defaultShape, @(x) any(validatestring(x,expectedShapes)));
             addOptional(p, 'GridRes', defaultGridSize, @(x)validateattributes(x,{'numeric'}, {'nonempty','integer','positive'}, 'grid_size'));
             addOptional(p, 'ProbeRadius', defaultProbeRadius, @(x)validateattributes(x,{'numeric'}, {'nonempty','positive'}, 'probe_radius'));
             addOptional(p, 'SmearFactor', defaultSmearFactor,@(x)validateattributes(x,{'numeric'}, {'nonempty','nonnegative','<',1}, 'smear_factor'));
@@ -71,7 +71,7 @@ classdef molShape < handle
             parse(p, pdbStruct, varargin{:});
             
             obj.GridRes = p.Results.GridRes;
-            obj.FunctionType = p.Results.Shape;
+            obj.FunctionType = p.Results.FunctionType;
             obj.ShowLog = p.Results.ShowLog;
             
             if strcmp(obj.FunctionType,'electron_density')
