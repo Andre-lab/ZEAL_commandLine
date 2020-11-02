@@ -24,20 +24,20 @@ classdef ZEAL < handle
     properties
         fixed       % holder for data specific for fixed structure: PDB data, ZC moments etc
         rotating    % holder for data specific for rotating structure: PDB data, ZC moments etc
-        Settings    % holder for various settings: PDB selection, ZC, shape function 
-        Search      % holder for data after alignment search 
+        Settings    % holder for various settings: PDB selection, ZC, shape function
+        Search      % holder for data after alignment search
         ZCDdistance % the Eucldiean distance between the shape descriptors of the fixed and rotating structure
         Score       % the ZEAL score
     end
     
     properties (Hidden)
         AlignMode % true/false
-                    % true if ZEAL should align (2 shapes defined), otherwise
-                    % compute shape descriptors (1 shape defined)
+        % true if ZEAL should align (2 shapes defined), otherwise
+        % compute shape descriptors (1 shape defined)
         ChiCoeffs   % holder for values and indices for chi coeffs
         Logging
         AlignLater % true/false (false by default)
-                   % if true then ZEAL will not start aligning automatically                   
+        % if true then ZEAL will not start aligning automatically
     end
     
     
@@ -53,7 +53,7 @@ classdef ZEAL < handle
             % letter is the chain ID that should be extracted
             %
             % OPTIONAL
-            % 'name'-value pairs (default value)
+            % 'name'-value pairs : type (default value)
             % (or given as a structure: the parser expands structures into separate inputs,
             % where each field name corresponds to an input parameter name)
             %
@@ -63,7 +63,7 @@ classdef ZEAL < handle
             % 'Order'           : integer (20)
             % 'GridRes'         : integer (64)
             %
-            % 'AlignLater'      : true/false (false) 
+            % 'AlignLater'      : true/false (false)
             % If true then ZEAL will not start searching for best alignment
             % automatically. Manuall start the search using the method
             % shapeAlign(ZEALobject).
@@ -71,9 +71,13 @@ classdef ZEAL < handle
             % 'LogOption'       : 'basic' / 'standard' / 'detailed' / 'none' ('standard')
             % Sets the level of information printed to the console.
             % 'detailed' not recommended unless option 'AlignLater' is set
-            % to true; 
+            % to true;
             %
-            % 'Shape'           : string ('MS') {choose between 'SAS','MS','vdw','electron_density'}
+            % 'ShapeFunction'   : string ('MS') {choose between 'SAS','MS','vdw','electron_density'}
+            % MS = molecular surface; SAS = solvent-accessible surface; vdw
+            % = van der Waals; electron_density = Gaussian atom
+            % representation 
+            % 
             % 'ProbeRadius'     : integer (1.4)
             % 'SmearFactor'     : double (0.3) - for electron_density shape
             % 'ShellThickness'  : integer (1)
@@ -111,8 +115,8 @@ classdef ZEAL < handle
             % ZCD_5MOK.fixed.ShapeDescriptors
             %
             %
-            % 2) If two structrues are given, then ZEAL will compute the shape similarity 
-            %    between the structures (the Euclidean distance between their shape descriptors (ZEAL.ZCDdistance)), 
+            % 2) If two structrues are given, then ZEAL will compute the shape similarity
+            %    between the structures (the Euclidean distance between their shape descriptors (ZEAL.ZCDdistance)),
             %    and then search for the best superposition (unless 'AlignLater' = true )
             %
             % Ex:
@@ -152,7 +156,7 @@ classdef ZEAL < handle
             default_Shape = 'MS';
             default_ProbeRadius = 1.4;
             default_SmearFactor = 0.3;
-            default_ShellThickness = 1;
+            default_ShellThickness = 2;
             
             default_ChiCoeffPath = fullfile(pwd,'chi_coefficients');
             
@@ -163,7 +167,7 @@ classdef ZEAL < handle
             default_modelID = 1;
             
             expected_ShowLog = {'basic', 'standard', 'detailed', 'none'};
-            default_LogOption = 'standard'; 
+            default_LogOption = 'standard';
             
             default_AlignLater = false;
             
@@ -180,7 +184,7 @@ classdef ZEAL < handle
             addOptional(p, 'GridRes', default_GridRes, @(x)validateattributes(x,{'numeric'}, {'nonempty','integer', '>=', 32}, 'GridRes'));
             addOptional(p, 'FunEvals', default_FunEvals, @(x)validateattributes(x,{'numeric'}, {'nonempty','integer', 'positive'}, 'Order'));
             
-            addOptional(p, 'Shape', default_Shape, @(x) any(validatestring(x,expected_Shapes)));
+            addOptional(p, 'ShapeFunction', default_Shape, @(x) any(validatestring(x,expected_Shapes)));
             addOptional(p, 'ProbeRadius', default_ProbeRadius, @(x)validateattributes(x,{'numeric'}, {'nonempty', 'positive'}, 'ProbeRadius'));
             addOptional(p, 'SmearFactor', default_SmearFactor, @(x)validateattributes(x,{'numeric'}, {'nonempty', 'positive', '>',0, '<', 1}, 'SmearFactor'));
             addOptional(p, 'ShellThickness', default_ShellThickness, @(x)validateattributes(x,{'numeric'}, {'nonempty','integer', 'positive'}, 'ShellThickness'));
@@ -205,7 +209,7 @@ classdef ZEAL < handle
             % Parse and set defaults
             parse(p, fix, varargin{:});
             
-            if isempty(p.Results.rot) 
+            if isempty(p.Results.rot)
                 obj.AlignMode = false;
                 fprintf('\nRunning ZEAL in single mode');
             else % rot structure given -> align mode activated
@@ -220,7 +224,7 @@ classdef ZEAL < handle
             
             obj.Settings.ChiCoeffPath = p.Results.ChiCoeffPath;
             
-            obj.Settings.molShape.Shape = p.Results.Shape;
+            obj.Settings.molShape.FunctionType = p.Results.ShapeFunction;
             obj.Settings.molShape.GridRes = p.Results.GridRes;
             obj.Settings.molShape.ProbeRadius = p.Results.ProbeRadius;
             obj.Settings.molShape.SmearFactor = p.Results.SmearFactor;
@@ -240,7 +244,7 @@ classdef ZEAL < handle
                     obj.Logging.Level = 2;
                 case 'detailed'
                     obj.Logging.Level = 3;
-                    obj.Settings.molShape.ShowLog = true;    
+                    obj.Settings.molShape.ShowLog = true;
                     obj.fixed.Selection.ShowLog = true;
                     obj.rotating.Selection.ShowLog = true;
                 case 'none'
@@ -254,7 +258,7 @@ classdef ZEAL < handle
             obj.fixed.Selection.includeHatoms = p.Results.fix_includeHatoms;
             obj.fixed.Selection.chainID = p.Results.fix_chainID;
             obj.fixed.Selection.altLocID = p.Results.fix_altLocID;
-            obj.fixed.Selection.modelNumber = p.Results.fix_modelNumber;                        
+            obj.fixed.Selection.modelNumber = p.Results.fix_modelNumber;
             
             % --- Import structures ---
             if obj.Logging.Level > 0
@@ -349,9 +353,9 @@ classdef ZEAL < handle
                 obj.Search.SurrOptOut.exitflag, ...
                 obj.Search.SurrOptOut.output, ...
                 obj.Search.SurrOptOut.trials] = surrogateopt(@objFun, ...
-                                obj.Settings.EulerAngles.LowerBound, ...
-                                obj.Settings.EulerAngles.UpperBound, ...
-                                obj.Settings.SurrOpt);
+                obj.Settings.EulerAngles.LowerBound, ...
+                obj.Settings.EulerAngles.UpperBound, ...
+                obj.Settings.SurrOpt);
             
             obj.Score = -1*obj.Search.SurrOptOut.Score;
             
@@ -368,7 +372,7 @@ classdef ZEAL < handle
                 
                 % rotate orignal atom coordinates
                 atomlistRot_rotated = obj.rotating.molShape.AtomData;
-                atomlistRot_rotated(:,1:3) = atomlistRot_rotated(:,1:3) * R';
+                atomlistRot_rotated(:,1:3) = atomlistRot_rotated(:,1:3) * R;
                 
                 % Compute new shape function
                 updateShapeFunction(obj, atomlistRot_rotated)
@@ -434,9 +438,9 @@ classdef ZEAL < handle
                     
                     obj.Search.History.prev_val = 0;
                     obj.Search.History.startTime = tic;
-                                        
+                    
                 case 'iter' % surrogateopt is running
-                                        
+                    
                     searchTime = toc(obj.Search.History.startTime);
                     
                     if optimvalues.fval < (obj.Search.History.prev_val*1.01)
@@ -477,7 +481,7 @@ classdef ZEAL < handle
         
         function loadChiCoeffs(obj)
             % loadChiCoeffs Loads the object-independent chi coefficients
-            % used for the ZC moment computation. The folder path is taken from 
+            % used for the ZC moment computation. The folder path is taken from
             % obj.Settings.ChiCoeffPath and the files themself are assumed to
             % be mat-files with name 'chiCoeffs_order_X.mat', where X is the
             % ZC order.
@@ -495,18 +499,18 @@ classdef ZEAL < handle
             obj.ChiCoeffs.Values = obj.ChiCoeffs.chi_coeff_cell;
             obj.ChiCoeffs.Indices = obj.ChiCoeffs.chi_nlm_rst_cell;
             obj.ChiCoeffs.Order = obj.Settings.Order;
-                        
+            
         end
         
         function Score = computeScore(obj)
-            % computeScore Compute the ZEAL score for the shape superposition. 
+            % computeScore Compute the ZEAL score for the shape superposition.
             % The ZEAL score is the ZC moment correlation between the fixed and the
             % rotating structure, computed as the cosine of the angle
             % between the N-dimensional moment-vectors. Thus, cos(small
             % angle) corrsponds to high moment-correlation = the ZEAL
-            % score. Because the moments are complex, the can angle can be defined 
-            % differently. Here we use the so called Euclidean angle, but a so called 
-            % Hermitian angle can also be defined. 
+            % score. Because the moments are complex, the can angle can be defined
+            % differently. Here we use the so called Euclidean angle, but a so called
+            % Hermitian angle can also be defined.
             
             % ZEAL score = Cos(Euclidean angle)
             Score = real(dot(obj.rotating.ZC.Moments.Values, obj.fixed.ZC.Moments.Values)) / (norm(obj.rotating.ZC.Moments.Values)*norm(obj.fixed.ZC.Moments.Values));
@@ -527,42 +531,305 @@ classdef ZEAL < handle
             obj.ZCDdistance = norm(obj.fixed.ZC.Descriptors -  obj.rotating.ZC.Descriptors, 2);
             
         end
-               
+        
         function save2pdb(obj,varargin)
             % save2pdb Export strucure to pdb file
-            % By default all structures in the object (fixed and rotated)
-            % are exported to pdbfiles in the current folder. 
+            % By default, ff both structures exist in the object (fixed and rotated)
+            % then those are exported to pdbfiles in the current folder.
+            % The fixed strucure is exported if ZEAL is run in 'single
+            % structure' mode (i.e. shape analysis of one structure = the fixed structure).
             
             % OPTIONAL INPUT
+            %'name'-value pairs : type : default value {expected}
             %
+            % 'structure'       :   char : 'all'  {'fixed','rotating','all'}       
             %
+            % 'includeHetatoms' :   logical : false {true/false}
             %
+            % 'includeAll'      :   logical : false {true/false}
             %
-            %
-            %
+            % 'folderPath'      :   char : current directory 
             %
             
             
+            expectedStructures = {'fixed', 'rotating', 'all'};
+            
+            if ~isempty(obj.rotating)
+                defaultStructure = 'all';
+            else
+                defaultStructure = 'fixed';
+            end
+            
+            defaultPath = pwd;
+            
+            defaultHetatoms = false;
+            defaultAll = false;
+            
+            p = inputParser;
+            
+            addOptional(p, 'structure', defaultStructure, @(x) any(validatestring(x,expectedStructures)));
+            addOptional(p, 'includeHetatoms', defaultHetatoms);
+            addOptional(p, 'includeAll', defaultAll);
+            
+            addOptional(p, 'folderPath', defaultPath);
+            
+            parse(p, varargin{:});
+            
+            selectedStructure = p.Results.structure;
+            includeHetatoms = p.Results.includeHetatoms;
+            includeAll = p.Results.includeAll;
+            folderpath = p.Results.folderPath;
+            
+            
+            if strcmp(selectedStructure,'fixed') ||  strcmp(selectedStructure,'all')
+                
+                selection = obj.fixed.PDB.Selection;
+                
+                if includeHetatoms || includeAll
+                    selection.includeHetatoms = includeHetatoms;
+                end
+                
+                if includeAll
+                    selection.chainID = 'all';
+                    selection.altLocID = 'all';
+                end
+                
+                pdbData = PDB.parseMatlabPDBstruct(obj.fixed.PDB.MatlabData, selection);
+                
+                T = getTranslationMatrix(obj, 'fixed');
+                R = getRotationMatrix(obj, 'fixed');
+                
+                xyz = [pdbData.X' pdbData.Y' pdbData.Z'];
+                
+                xyzRot = [ xyz ones(length(xyz),1)] * T * R;
+                
+                pdbData.X = xyzRot(:,1);
+                pdbData.Y = xyzRot(:,2);
+                pdbData.Z = xyzRot(:,3);
+                
+                [~, name, ~] = fileparts(obj.fixed.Name);
+                filePath=fullfile(folderpath, [name '_ZEAL.pdb']);
+                
+                exportPdb(obj, 'fixed', pdbData, filePath)
+                
+            end
+            
+            
+            if strcmp(selectedStructure,'rotating') ||  strcmp(selectedStructure,'all')
+                
+                selection = obj.rotating.PDB.Selection;
+                
+                if includeHetatoms || includeAll
+                    selection.includeHetatoms = includeHetatoms;
+                end
+                
+                if includeAll
+                    selection.chainID = 'all';
+                    selection.altLocID = 'all';
+                end
+                
+                pdbData = PDB.parseMatlabPDBstruct(obj.rotating.PDB.MatlabData, selection);
+                
+                T = getTranslationMatrix(obj, 'rotating');
+                R = getRotationMatrix(obj, 'rotating');
+                
+                xyz = [pdbData.X' pdbData.Y' pdbData.Z'];
+                
+                xyzRot = [ xyz ones(length(xyz),1)] * T * R;
+                
+                pdbData.X = xyzRot(:,1);
+                pdbData.Y = xyzRot(:,2);
+                pdbData.Z = xyzRot(:,3);
+                
+                [~, name, ~] = fileparts(obj.rotating.Name);
+                filePath=fullfile(folderpath, [name '_ZEAL.pdb']);
+                
+                exportPdb(obj, 'rotating', pdbData, filePath)
+                
+            end
             
         end
         
+        function T = getTranslationMatrix(obj, structure)
+            
+            switch structure
+                
+                case 'fixed'
+                    XYZ = [obj.fixed.PDB.Data.X; obj.fixed.PDB.Data.Y; obj.fixed.PDB.Data.Z]';
+                case 'rotating'
+                    XYZ = [obj.rotating.PDB.Data.X; obj.rotating.PDB.Data.Y; obj.rotating.PDB.Data.Z]';
+            end
+            
+            COM = mean(XYZ);
+            
+            T = eye(4);
+            T(end, :) = [-COM 1];
+            
+        end
+        
+        
+        function R = getRotationMatrix(obj, structure)
+            
+            R = eye(4);
+            
+            switch structure
+                
+                case 'fixed'
+                    
+                    R(end,end) = 0;
+                    
+                case 'rotating'
+                    
+                    R(1:3,1:3) = ZEAL.euler2rotMat(obj.Search.EulerAngles);
+            end
+            
+        end
+        
+        function exportPdb(obj, structure, pdbData, fileSavePath)
+            % Save pdbdata to pdbfile with ZEAL info in REMARK fields
+            %
+            % INPUT
+            %                   typr                 expected value
+            % <structure>     :  char       :     {'fixed', 'rotating'}
+            % Structure to save
+            %
+            % <pdbData>       : struct      :     structure from PDB class 
+            %
+            % <fileSavePath>  : char 
+            % path to the file that we create and write data data
+            %
+            
+            
+            % get file name from path        
+            [~, name, ~] = fileparts(fileSavePath);
+            
+            fprintf('outputting PDB in file %s.pdb ...', name);
+            
+            % create and open file    
+            fid = fopen(fileSavePath, 'w');
+            if fid == -1
+                error('Author:Function:OpenFile', 'Cannot open file: %s', name);
+            end
+            % write settings used for the shape alignment to REMARK record
+            fprintf(fid, '%-12s ZEAL Protein shape alignment %s\n', 'REMARK' , datestr(now));
+            fprintf(fid, '%-12s \n', 'REMARK');
+           
+            if strcmp(structure,'fixed')
+                fprintf(fid, '%-12s ZEAL Fixed (this file): %s CHAIN %s\n', 'REMARK' , obj.fixed.Name, obj.fixed.PDB.Selection.chainID);
+                fprintf(fid, '%-12s ZEAL Rotating: %s CHAIN %s\n', 'REMARK' , obj.rotating.Name, obj.fixed.PDB.Selection.chainID);
+            elseif strcmp(structure,'rotating')
+                fprintf(fid, '%-12s ZEAL Rotating (this file): %s CHAIN %s\n', 'REMARK' , obj.rotating.Name, obj.rotating.PDB.Selection.chainID);
+                fprintf(fid, '%-12s ZEAL Fixed: %s CHAIN %s\n', 'REMARK' , obj.fixed.Name, obj.fixed.PDB.Selection.chainID);
+            end
+            
+            fprintf(fid, '%-12s ZEAL score: %5.5f \n', 'REMARK' , obj.Score);
+            fprintf(fid, '%-12s \n', 'REMARK');
+            fprintf(fid, '%-12s ZEAL SETTINGS\n', 'REMARK');
+            fprintf(fid, '%-12s ZEAL Maximum order of Zernike-Canterakis moments: %d\n', 'REMARK', obj.Settings.Order);
+            fprintf(fid, '%-12s ZEAL Grid resolution:\t%d\n', 'REMARK', obj.Settings.GridRes);
+            fprintf(fid, '%-12s ZEAL Shape function:\t%s\n', 'REMARK', obj.Settings.molShape.FunctionType);
+            
+            if strcmp(obj.Settings.molShape.FunctionType, 'electron_density')
+                fprintf(fid, '%-12s ZEAL \t\t\t\t Smear factor: %2.2f\n', 'REMARK', obj.Settings.molShape.SmearFactor);
+            else
+                fprintf(fid, '%-12s ZEAL \t\t\t\t Probe radius: %2.2f Å\n', 'REMARK', obj.Settings.molShape.ProbeRadius);
+                fprintf(fid, '%-12s ZEAL \t\t\t\t Shell thickness: %d\n', 'REMARK', obj.Settings.molShape.ShellThickness);
+            end
+            
+            fprintf(fid, '%-12s \n', 'REMARK');
+            
+            fprintf(fid, '%-12s The 4x4 affine transformation matrix (Tmatrix)\n', 'REMARK');
+            fprintf(fid, '%-12s to get new coordinates (this file) from original (orig) coordinates\n', 'REMARK');
+            
+            fprintf(fid, '%-12s \n', 'REMARK');
+            
+            T = getTranslationMatrix(obj, structure);
+            R = getRotationMatrix(obj, structure);
+                
+            transMat = T*R;
+            
+            fprintf(fid, '%-12s Tmatrix = [\n', 'REMARK');
+
+            fprintf(fid, '%-12s \t\t %5.5f %5.5f %5.5f %5.5f\n', 'REMARK', transMat(1,1), transMat(1,2), transMat(1,3), transMat(1,4));
+            fprintf(fid, '%-12s \t\t %5.5f %5.5f %5.5f %5.5f\n', 'REMARK', transMat(2,1), transMat(2,2), transMat(2,3), transMat(2,4));
+            fprintf(fid, '%-12s \t\t %5.5f %5.5f %5.5f %5.5f\n', 'REMARK', transMat(3,1), transMat(3,2), transMat(3,3), transMat(3,4));
+            fprintf(fid, '%-12s \t\t %5.5f %5.5f %5.5f %5.5f\n', 'REMARK', transMat(4,1), transMat(4,2), transMat(4,3), transMat(4,4));
+            fprintf(fid, '%-12s \t\t\t ] \n', 'REMARK');
+            fprintf(fid, '%-12s \n', 'REMARK');
+            
+            fprintf(fid, '%-12s [ new_X new_Y new_Z ] = [ orig_X orig_Y orig_Z 1 ] * Tmatrix \n', 'REMARK');
+            
+            fprintf(fid, '%-12s \n', 'REMARK');
+            fprintf(fid, '%-12s \n', 'REMARK');
+            
+            
+            fprintf(fid, '%-12s Cite: \n', 'REMARK');
+            fprintf(fid, '%-12s F. Ljung and I. André, \n', 'REMARK');
+            fprintf(fid, '%-12s ZEAL: Structure alignment based on shape similarity, Bioinformatics (2020) \n', 'REMARK');
+            fprintf(fid, '%-12s Bioinformatics (2020) \n', 'REMARK');
+            
+            fprintf(fid, '%-12s \n', 'REMARK');
+            
+            
+            ZEAL.writeModel(fid, pdbData)
+            
+            fprintf( fid, 'END\n');
+            
+            
+            % close file
+            fprintf('\n done! closing file...\n');
+            fclose(fid);
+            
+        end                
+        
     end
+       
     
     methods (Static)
         
-       function Rmat = euler2rotMat(x)
+        function Rmat = euler2rotMat(x)
             % euler2rotMat Get the rotation matrix corresponding to the
             % rotation parameterized by the Euler angles x and rotation
             % order (Euler convention) 'zyz'
-           
+            
             % lambdas for Euler angles to rotation matrix
             Ry = @(theta) [cos(theta) 0 -sin(theta); 0 1 0; sin(theta) 0 cos(theta)];
             Rz = @(theta) [cos(theta) sin(theta) 0; -sin(theta) cos(theta) 0; 0 0 1];
             
-            Rmat = Rz(x(3))*Ry(x(2))*Rz(x(1));
-          
-        end 
+            Rmat = (Rz(x(3))*Ry(x(2))*Rz(x(1)))';
+            
+        end
+        
+        function writeModel(fid, model)
+            % Write PDB structure data to file (id = fid). Structure format is that from PDB class. 
+            % Helper function to export2Pdb method in case we want to write
+            % multiple models to same file
+            
+            
+            nAtoms = length(model.atomNum);
+            
+            % output data
+            try
+                for n = 1:nAtoms
+                    
+                    % fix atomName spacing
+                    model.atomName(n) = {sprintf('%-3s',cell2mat(model.atomName(n)))};
+                    
+                    % standard PDB output line
+                    fprintf( fid, '%-6s%5u%5s%1.1s%3s %1.1s%4i%12.3f%8.3f%8.3f%6.2f%6.2f%12s%2s\n', ...
+                        cell2mat(model.recordName(n)), model.atomNum(n), cell2mat(model.atomName(n)), ...
+                        cell2mat(model.altLoc(n)), cell2mat(model.resName(n)), cell2mat(model.chainID(n)), ...
+                        model.resNum(n), model.X(n), model.Y(n), model.Z(n), model.occupancy(n), model.betaFactor(n), ...
+                        cell2mat(model.element(n)), cell2mat(model.charge(n)));
+                end
                 
+            catch
+                error('Failed to write PDB records.');
+            end
+            
+        end
+        
+        
     end
     
     
