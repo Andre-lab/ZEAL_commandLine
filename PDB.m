@@ -389,8 +389,7 @@ classdef PDB < handle
             keepListTF = strcmp(recordName, 'ATOM  ');
             
             if includeHetatoms
-                keepHetatomTF = strcmp(recordName, 'HETATM');
-                keepListTF = (keepListTF + keepHetatomTF) == 2;
+                keepListTF = contains(recordName, {'ATOM','HETATM'});
             end
             
             if ~includeHatoms
