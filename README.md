@@ -268,3 +268,58 @@ inputStruct.GridRes = 100;
 ZEAL('5mok', inputStruct)
 ```
 
+
+# Saving
+
+
+Aligned structrues can be saved to PDB files using the save2pdb method. By default, both the fixed and rotating structure are exported to the current directory (see below on how to change). The names of the new pdb files have the format `originalname_ZEAL.pdb `(this can't be changed)`. `Also, HETATM records are omitted but this can be changed (se below).
+
+
+
+```matlab:Code
+save2pdb(shapeAlignData)
+```
+
+
+```text:Output
+outputting PDB in file 5mokA_ZEAL.pdb ...
+ done! closing file...
+outputting PDB in file 2ho1A_ZEAL.pdb ...
+ done! closing file...
+```
+
+
+
+To export ***all records***, use
+
+
+
+```matlab:Code(Display)
+save2pdb(shapeAlignData, 'includeAll', true)
+```
+
+
+
+If the original pdb file contains multiple chains, and the alignment was done with respect to chain X of the fixed structure and chain Y of the rotating structure, the coordinates are transformed so that the centroid of the X chain and Y chain are placed at the origo, and coordinates of the rotating structure are rotated relative that center. 
+
+
+
+
+To ***include HETATM records***, use 
+
+
+
+```matlab:Code(Display)
+save2pdb(shapeAlignData, 'includeHetatoms', true)
+```
+
+
+
+To ***save to specific directory***, use 
+
+
+
+```matlab:Code(Display)
+save2pdb(shapeAlignData, 'folderPath', '/Users/yourUserName/Desktop')
+```
+
