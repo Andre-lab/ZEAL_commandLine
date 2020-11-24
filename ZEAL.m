@@ -795,8 +795,31 @@ classdef ZEAL < handle
             
         end
         
+        function obj = mergeZEAL(fixObj, rotObj)
+            % method to merge two ZEAL objects in "single mode" to a new
+            % object in "align mode", i.e. a fixed and rotating structure
+            % that can be aligned. The shape similarity (Euclidean ZCD
+            % distance) is computed upon creation. 
+            % 
+            % Example
+            % a = ZEAL('1stmA');
+            % b = ZEAL('2lisA')
+            % ab = mergeZEAL(a,b)
+            %
+            % Perform alignment 
+            % shapeAlign(ab)
+            
+            obj = fixObj;
+            obj.fixed = fixObj.fixed;
+            obj.rotating = rotObj.fixed;
+            
+            computeZCDdistance(obj);           
+            
+            
+        end
+        
     end
-       
+    
     
     methods (Static)
         
