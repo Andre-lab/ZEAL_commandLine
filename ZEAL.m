@@ -249,6 +249,16 @@ classdef ZEAL < handle
                     obj.Logging.Level = 0;
             end
             
+            % Set surrogate optimization options
+            obj.Settings.SurrOpt = optimoptions('surrogateopt');
+            obj.Settings.SurrOpt.MaxFunctionEvaluations = p.Results.FunEvals;
+            obj.Settings.SurrOpt.PlotFcn = [];
+            obj.Settings.SurrOpt.Display = 'none';
+            obj.Settings.SurrOpt.OutputFcn = @(a1,a2,a3)surrOptiOutputFcn(a1,a2,a3,obj);
+            
+            obj.Settings.EulerAngles.LowerBound = [0 0 0];
+            obj.Settings.EulerAngles.UpperBound = [2*pi pi 2*pi];
+            obj.Settings.EulerAngles.convention = 'zyz';
             
             % Fix
             obj.fixed.Name = p.Results.fix;
@@ -256,7 +266,7 @@ classdef ZEAL < handle
             obj.fixed.Selection.includeHatoms = p.Results.fix_includeHatoms;
             obj.fixed.Selection.chainID = p.Results.fix_chainID;
             obj.fixed.Selection.altLocID = p.Results.fix_altLocID;
-
+            
             % --- Import structures ---
             if obj.Logging.Level > 0
                 fprintf('\n Importing fixed structure: %s', obj.fixed.Name);
@@ -277,18 +287,7 @@ classdef ZEAL < handle
                 end
                 
                 obj.rotating.PDB = PDB(obj.rotating.Name, obj.rotating.Selection);
-                
-                % Set surrogate optimization options
-                obj.Settings.SurrOpt = optimoptions('surrogateopt');
-                obj.Settings.SurrOpt.MaxFunctionEvaluations = p.Results.FunEvals;
-                obj.Settings.SurrOpt.PlotFcn = [];
-                obj.Settings.SurrOpt.Display = 'none';
-                obj.Settings.SurrOpt.OutputFcn = @(a1,a2,a3)surrOptiOutputFcn(a1,a2,a3,obj);
-                
-                obj.Settings.EulerAngles.LowerBound = [0 0 0];
-                obj.Settings.EulerAngles.UpperBound = [2*pi pi 2*pi];
-                obj.Settings.EulerAngles.convention = 'zyz';
-                
+                                
             end
             
             % --- Compute shape functions ---
@@ -529,6 +528,14 @@ classdef ZEAL < handle
             % between the vector elements containing the shape-descriptor
             % values.
             
+            if isempty(obj.fixed.ZC.Descriptors)
+                computeDescriptors(obj.fixed.ZC);
+            end
+            
+            if isempty(obj.rotating.ZC.Descriptors)
+                computeDescriptors(obj.rotating.ZC);
+            end
+            
             obj.ZCDdistance = norm(obj.fixed.ZC.Descriptors -  obj.rotating.ZC.Descriptors, 2);
             
         end
@@ -595,12 +602,12 @@ classdef ZEAL < handle
                     selection.altLocID = 'all';
                 end
                 
-                pdbData = PDB.parseMatlabPDBstruct(obj.fixed.PDB.MatlabData, selection);
+                pdbData = PDB.parsePDBstruct(obj.fixed.PDB.AllData, selection);
                 
                 T = getTranslationMatrix(obj, 'fixed');
                 R = getRotationMatrix(obj, 'fixed');
                 
-                xyz = [pdbData.X' pdbData.Y' pdbData.Z'];
+                xyz = [pdbData.X pdbData.Y pdbData.Z];
                 
                 xyzRot = [ xyz ones(length(xyz),1)] * T * R;
                 
@@ -629,12 +636,12 @@ classdef ZEAL < handle
                     selection.altLocID = 'all';
                 end
                 
-                pdbData = PDB.parseMatlabPDBstruct(obj.rotating.PDB.MatlabData, selection);
+                pdbData = PDB.parsePDBstruct(obj.rotating.PDB.AllData, selection);
                 
                 T = getTranslationMatrix(obj, 'rotating');
                 R = getRotationMatrix(obj, 'rotating');
                 
-                xyz = [pdbData.X' pdbData.Y' pdbData.Z'];
+                xyz = [pdbData.X pdbData.Y pdbData.Z];
                 
                 xyzRot = [ xyz ones(length(xyz),1)] * T * R;
                 
@@ -656,9 +663,9 @@ classdef ZEAL < handle
             switch structure
                 
                 case 'fixed'
-                    XYZ = [obj.fixed.PDB.Data.X; obj.fixed.PDB.Data.Y; obj.fixed.PDB.Data.Z]';
+                    XYZ = [obj.fixed.PDB.Data.X obj.fixed.PDB.Data.Y obj.fixed.PDB.Data.Z];
                 case 'rotating'
-                    XYZ = [obj.rotating.PDB.Data.X; obj.rotating.PDB.Data.Y; obj.rotating.PDB.Data.Z]';
+                    XYZ = [obj.rotating.PDB.Data.X obj.rotating.PDB.Data.Y obj.rotating.PDB.Data.Z];
             end
             
             COM = mean(XYZ);
@@ -815,7 +822,7 @@ classdef ZEAL < handle
             nAtoms = length(model.atomNum);
             
             % output data
-            try
+%             try
                 for n = 1:nAtoms
                     
                     % fix atomName spacing
@@ -826,12 +833,12 @@ classdef ZEAL < handle
                         cell2mat(model.recordName(n)), model.atomNum(n), cell2mat(model.atomName(n)), ...
                         cell2mat(model.altLoc(n)), cell2mat(model.resName(n)), cell2mat(model.chainID(n)), ...
                         model.resNum(n), model.X(n), model.Y(n), model.Z(n), model.occupancy(n), model.betaFactor(n), ...
-                        cell2mat(model.element(n)), cell2mat(model.charge(n)));
+                        cell2mat(model.element(n)), model.charge(n));
                 end
                 
-            catch
-                error('Failed to write PDB records.');
-            end
+%             catch
+%                 error('Failed to write PDB records.');
+%             end
             
         end
         
