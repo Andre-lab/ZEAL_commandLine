@@ -292,7 +292,8 @@ classdef PDB < handle
         end
         
         function PDBdata = parsePDBstruct(pdbStruct, varargin)
-            % Create a simpler (filtered) struct for PDB data from Matlabs PDB object
+            % Create a filtered struct from PDB data in (hidden) AllData
+            % property
             %
             % INPUT
             % -------------------------------------------------------------
