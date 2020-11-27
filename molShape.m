@@ -391,9 +391,9 @@ classdef molShape < handle
             
             
             
-            Xcrds = pdbData.X';
-            Ycrds = pdbData.Y';
-            Zcrds = pdbData.Z';
+            Xcrds = pdbData.X;
+            Ycrds = pdbData.Y;
+            Zcrds = pdbData.Z;
             
             atomPositionVariance = (3* [pdbData.betaFactor]) /  (8.0 * pi^2);
             atomSernumber = pdbData.atomNum;
