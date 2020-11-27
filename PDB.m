@@ -129,10 +129,10 @@ classdef PDB < handle
                 % Check if file is PDB or CIF
                 
                 switch obj.Source.Ext
-                    case 'pdb'
-                        obj.AllData = readPDBfile(fullfile(obj.Source.Path,obj.Source.Name, obj.Source.Ext ));
-                    case 'cif'
-                        obj.AllData = readCIFdata(fullfile(obj.Source.Path,obj.Source.Name, obj.Source.Ext ));
+                    case '.pdb'
+                        obj.AllData = PDB.readPDBfile(fullfile(obj.Source.Path, [obj.Source.Name obj.Source.Ext] ));
+                    case '.cif'
+                        obj.AllData = PDB.readCIFdata(fullfile(obj.Source.Path, [obj.Source.Name obj.Source.Ext] ));
                 end
                                
                 if obj.ShowLog
@@ -734,20 +734,20 @@ classdef PDB < handle
                 charge(n)     = {thisLine(25:26)};
             end
             % reformat data for convenience
-            PDBdata.recordName = strtrim(recordName);
-            PDBdata.atomNum    = str2double(atomNum);
-            PDBdata.atomName   = strtrim(atomName);
-            PDBdata.altLoc     = altLoc;
-            PDBdata.resName    = strtrim(resName);
-            PDBdata.chainID    = chainID;
-            PDBdata.resNum     = str2double(resNum);
-            PDBdata.X          = str2double(X);
-            PDBdata.Y          = str2double(Y);
-            PDBdata.Z          = str2double(Z);
-            PDBdata.occupancy  = str2double(occupancy);
-            PDBdata.betaFactor = str2double(betaFactor);
-            PDBdata.element    = strtrim(element);
-            PDBdata.charge     = strtrim(charge);
+            PDBdata.recordName = (strtrim(recordName))';
+            PDBdata.atomNum    = (str2double(atomNum))';
+            PDBdata.atomName   = (strtrim(atomName))';
+            PDBdata.altLoc     = (altLoc)';
+            PDBdata.resName    = (strtrim(resName))';
+            PDBdata.chainID    = (chainID)';
+            PDBdata.resNum     = (str2double(resNum))';
+            PDBdata.X          = (str2double(X))';
+            PDBdata.Y          = (str2double(Y))';
+            PDBdata.Z          = (str2double(Z))';
+            PDBdata.occupancy  = (str2double(occupancy))';
+            PDBdata.betaFactor = (str2double(betaFactor))';
+            PDBdata.element    = (strtrim(element))';
+            PDBdata.charge     = (strtrim(charge))';
             % I commented these lines out, since they cause more problems than they
             % solve. They do clean up the output for certain situations.
             % if isnan(PDBdata.occupancy(1))
