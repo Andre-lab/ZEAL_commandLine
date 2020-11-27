@@ -303,7 +303,7 @@ classdef PDB < handle
             PDBdata.occupancy = cellfun(@str2double, pdbDataCif.('occupancy'));
             PDBdata.betaFactor = cellfun(@str2double, pdbDataCif.('B_iso_or_equiv'));
             PDBdata.element = pdbDataCif.('type_symbol');
-            PDBdata.charge = cellfun(@str2double, pdbDataCif.('pdbx_formal_charge'));
+            PDBdata.charge =  pdbDataCif.('pdbx_formal_charge');
             
         end
         
