@@ -140,22 +140,16 @@ classdef PDB < handle
                 end
                 
                 if obj.ShowLog
-                    fprintf('\n\t Filtering PDB data in model %d', obj.Selection.modelNumber);
-                    fprintf('\n\t\t Keeping chain with ID:\t %s', obj.Selection.chainID);
                     
-                    if obj.Selection.includeHetatoms
-                        fprintf('\n\t\t Keeping HETATOM records  ');
-                    else
-                        fprintf('\n\t\t Leaving out HETATOM records ');
+                    fprintf('\n Filtering PDB-data:');
+                    
+                    fields = fieldnames(obj.Selection);
+                    
+                    for i = 1:length(fields)
+                        
+                        fprintf('\n\t %s: %s', fields{i}, obj.Selection.(fields{i}));
+                        
                     end
-                    
-                    if obj.Selection.includeHatoms
-                        fprintf('\n\t\t Keeping Hydrogen atoms (if exist)');
-                    else
-                        fprintf('\n\t\t Leaving out Hydrogen atoms (if exist)');
-                    end
-                    
-                    fprintf('\n\t\t Keeping alt locations with ID:\t %s', obj.Selection.altLocID);
                     
                 end
                 
@@ -165,14 +159,37 @@ classdef PDB < handle
                 try
                     [~,name,~] = fileparts(obj.Name);
                     pdbid = name(1:4);
-                    
+
                     queryStr = sprintf('https://models.rcsb.org/v1/%s/atoms?encoding=cif&copy_all_categories=false', pdbid);
+                    
+                    if obj.ShowLog
+                       fprintf('\n Downloading PDB (CIF-format) with query \n%s ', queryStr); 
+                    end
+                    
                     cifDataPulled = webread(queryStr);
                                         
                     obj.AllData = PDB.readCIFdata(cifDataPulled);
                     
                     if numel(name)>4 % assume last letter specifies chain
+                        
+                        if obj.ShowLog
+                            fprintf('\n Selecting chain %s from structure', name(5));
+                        end
+                        
                         obj.Selection.chainID = name(5);
+                    end
+                    
+                    if obj.ShowLog
+                        fprintf('\n Filtering CIF-data:');
+                        
+                        fields = fieldnames(obj.Selection);
+                        
+                        for i = 1:length(fields)
+                           
+                            fprintf('\n\t %s: %s', fields{i}, obj.Selection.(fields{i}));
+                            
+                        end
+                        
                     end
                     
                     obj.Data = PDB.parsePDBstruct(obj.AllData, obj.Selection);
@@ -183,8 +200,7 @@ classdef PDB < handle
                     
                 catch ME
                     
-                    fprintf('%s', ME.message);
-                    error('\n Could not download structure %s in the RCSB PDB.', pdbid);
+                    error('%s', ME.message);
                     
                 end
                 
