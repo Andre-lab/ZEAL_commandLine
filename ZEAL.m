@@ -784,6 +784,30 @@ classdef ZEAL < handle
                 
             end
             
+            % check integrity of some data fields
+            nRecords = length(pdbData.atomNum);
+            
+            checkIfEmpty = @(x) isempty(x);
+            % occupancy
+            if isempty(pdbData.occupancy)
+                pdbData.occupancy = zeros(nRecords,1);
+            end
+            
+            % betaFactor
+            if isempty(pdbData.betaFactor)
+                pdbData.betaFactor = zeros(nRecords,1);
+            end
+            
+            % element
+            if nRecords == sum(cellfun(checkIfEmpty, pdbData.element))
+                pdbData.element = cell(nRecords,1);
+            end
+            
+            % charge 
+            if nRecords == sum(cellfun(checkIfEmpty, pdbData.charge))
+                pdbData.charge = cell(nRecords,1);
+            end
+            
             ZEAL.writeModel(fid, pdbData)
             
             fprintf( fid, 'END\n');
@@ -845,7 +869,7 @@ classdef ZEAL < handle
             nAtoms = length(model.atomNum);
             
             % output data
-%             try
+            try
                 for n = 1:nAtoms
                     
                     % fix atomName spacing
@@ -856,12 +880,12 @@ classdef ZEAL < handle
                         cell2mat(model.recordName(n)), model.atomNum(n), cell2mat(model.atomName(n)), ...
                         cell2mat(model.altLoc(n)), cell2mat(model.resName(n)), cell2mat(model.chainID(n)), ...
                         model.resNum(n), model.X(n), model.Y(n), model.Z(n), model.occupancy(n), model.betaFactor(n), ...
-                        cell2mat(model.element(n)), model.charge(n));
+                        cell2mat(model.element(n)), cell2mat(model.charge(n)));
                 end
                 
-%             catch
-%                 error('Failed to write PDB records.');
-%             end
+            catch
+                error('Failed to write PDB records.');
+            end
             
         end
         
