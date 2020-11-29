@@ -837,7 +837,30 @@ classdef ZEAL < handle
             obj.rotating = rotObj.fixed;
             
             computeZCDdistance(obj);           
+
+        end
+        
+        function ZCD = getShapeDescriptors(obj, structure)
             
+           switch structure
+               
+               case 'fixed'
+                   ZCD = obj.fixed.ZC.Descriptors;
+               case 'rotating'
+                   ZCD = obj.rotating.ZC.Descriptors;
+           end
+           
+        end
+        
+        function ZCmoments = getMoments(obj, structure)
+            
+            switch structure
+                
+                case 'fixed'
+                    ZCmoments = obj.fixed.ZC.Moments.Values;
+                case 'rotating'
+                    ZCmoments = obj.rotating.ZC.Moments.Values;
+            end
             
         end
         
