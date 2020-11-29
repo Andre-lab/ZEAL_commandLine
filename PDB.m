@@ -152,9 +152,7 @@ classdef PDB < handle
                     end
                     
                 end
-                
-                obj.Data = PDB.parsePDBstruct(obj.AllData, obj.Selection);
-                
+
             else % download
                 try
                     [~,name,~] = fileparts(obj.Name);
@@ -191,9 +189,7 @@ classdef PDB < handle
                         end
                         
                     end
-                    
-                    obj.Data = PDB.parsePDBstruct(obj.AllData, obj.Selection);
-                    
+
                     obj.Source.Path = queryStr;
                     obj.Source.Name = pdbid;
                     obj.Source.Ext = 'cif';
@@ -205,6 +201,10 @@ classdef PDB < handle
                 end
                 
             end
+            
+            obj.Data = PDB.parsePDBstruct(obj.AllData, obj.Selection);
+            
+            
             
         end
         
@@ -407,7 +407,7 @@ classdef PDB < handle
                 keepListTF = strcmp(pdbStruct.recordName, 'ATOM');
             end
             
-            if ~includeHatoms
+            if includeHatoms
                 keepHatomsTF = (strcmp(pdbStruct.element, 'H')) == 0;
                 keepListTF = (keepListTF + keepHatomsTF) == 2;
             end
@@ -422,22 +422,32 @@ classdef PDB < handle
                 keepListTF = (keepListTF + keepAltLocTF) == 2;
             end
             
-            PDBdata.recordName = pdbStruct.recordName(keepListTF);
-            PDBdata.atomNum    = pdbStruct.atomNum(keepListTF);
-            PDBdata.atomName   = pdbStruct.atomName(keepListTF);
-            PDBdata.altLoc     = pdbStruct.altLoc(keepListTF);
-            PDBdata.resName    = pdbStruct.resName(keepListTF);
-            
-            PDBdata.chainID    = pdbStruct.chainID(keepListTF);
-            PDBdata.resNum     = pdbStruct.resNum(keepListTF);
-            PDBdata.X          = pdbStruct.X(keepListTF);
-            PDBdata.Y          = pdbStruct.Y(keepListTF);
-            PDBdata.Z          = pdbStruct.Z(keepListTF);
-            
-            PDBdata.occupancy  = pdbStruct.occupancy(keepListTF);
-            PDBdata.betaFactor = pdbStruct.betaFactor(keepListTF);
-            PDBdata.element    = pdbStruct.element(keepListTF);
-            PDBdata.charge     = pdbStruct.charge(keepListTF);
+            if sum(keepListTF) > 0
+                
+                PDBdata.recordName = pdbStruct.recordName(keepListTF);
+                PDBdata.atomNum    = pdbStruct.atomNum(keepListTF);
+                PDBdata.atomName   = pdbStruct.atomName(keepListTF);
+                PDBdata.altLoc     = pdbStruct.altLoc(keepListTF);
+                PDBdata.resName    = pdbStruct.resName(keepListTF);
+                
+                PDBdata.chainID    = pdbStruct.chainID(keepListTF);
+                PDBdata.resNum     = pdbStruct.resNum(keepListTF);
+                PDBdata.X          = pdbStruct.X(keepListTF);
+                PDBdata.Y          = pdbStruct.Y(keepListTF);
+                PDBdata.Z          = pdbStruct.Z(keepListTF);
+                
+                PDBdata.occupancy  = pdbStruct.occupancy(keepListTF);
+                PDBdata.betaFactor = pdbStruct.betaFactor(keepListTF);
+                PDBdata.element    = pdbStruct.element(keepListTF);
+                PDBdata.charge     = pdbStruct.charge(keepListTF);
+                
+            else
+                
+                msgStr = sprintf('No PDB records availale when filtering on:\n 1) chain ID : %s\n 2) include HETATM : %d ', chainIDsel, includeHetatoms);
+                msgStr2 = 'Either the PDB records are not present or I cannot parse the data correctly - please send bug-report if that is the case';
+                error('\n%s\n\n%s ',msgStr, msgStr2);
+                
+            end
             
         end
         
