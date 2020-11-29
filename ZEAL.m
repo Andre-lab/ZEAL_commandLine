@@ -272,8 +272,7 @@ classdef ZEAL < handle
                 fprintf('\n Importing fixed structure: %s', obj.fixed.Name);
             end
             obj.fixed.PDB = PDB(obj.fixed.Name, obj.fixed.Selection);
-            
-            
+           
             if  obj.AlignMode
                 % Set PDB parameters for rotating if align mode activated
                 obj.rotating.Name = p.Results.rot;
