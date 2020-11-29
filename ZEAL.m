@@ -840,8 +840,14 @@ classdef ZEAL < handle
 
         end
         
-        function ZCD = getShapeDescriptors(obj, structure)
+        function ZCD = getShapeDescriptors(obj, varargin)
             
+            if isempty(varargin)
+                structure = 'fixed';
+            else
+                structure = varargin{1};
+            end
+           
            switch structure
                
                case 'fixed'
@@ -852,7 +858,13 @@ classdef ZEAL < handle
            
         end
         
-        function ZCmoments = getMoments(obj, structure)
+        function ZCmoments = getMoments(obj, varargin)
+            
+            if isempty(varargin)
+                structure = 'fixed';
+            else
+                structure = varargin{1};
+            end
             
             switch structure
                 
