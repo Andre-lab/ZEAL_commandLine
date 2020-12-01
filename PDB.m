@@ -156,7 +156,7 @@ classdef PDB < handle
             else % download
                 try
                     [~,name,~] = fileparts(obj.Name);
-                    pdbid = name(1:4);
+                    pdbid = lower(name(1:4));
 
                     queryStr = sprintf('https://models.rcsb.org/v1/%s/atoms?encoding=cif&copy_all_categories=false', pdbid);
                     
