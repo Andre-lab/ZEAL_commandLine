@@ -163,7 +163,7 @@ classdef ZEAL < handle
             
             default_includeHetatoms = false;
             default_includeHatoms = false;
-            default_chainID = 'A';
+            default_chainID = 'all';
             default_altLocID = 'A';
             
             expected_ShowLog = {'basic', 'standard', 'detailed', 'none'};
@@ -489,14 +489,16 @@ classdef ZEAL < handle
             
             chiCoeffDataPath = fullfile(obj.Settings.ChiCoeffPath, chiCoeffFilename);
             
-            if obj.Logging.Level > 2
-                fprintf('\n Loading Chi coefficients from file:\n\t %s', chiCoeffDataPath);
-            end
+%             if ~exist('chi_coeff_cell','var')
+% %                 if obj.Logging.Level > 2
+%                     fprintf('\n Loading Chi coefficients from file:\n\t %s', chiCoeffDataPath);
+% %                 end
+%                 
+                load(chiCoeffDataPath,'chi_coeff_cell', 'chi_nlm_rst_cell');
+%             end
             
-            obj.ChiCoeffs=load(chiCoeffDataPath,'chi_coeff_cell', 'chi_nlm_rst_cell');
-            
-            obj.ChiCoeffs.Values = obj.ChiCoeffs.chi_coeff_cell;
-            obj.ChiCoeffs.Indices = obj.ChiCoeffs.chi_nlm_rst_cell;
+            obj.ChiCoeffs.Values = chi_coeff_cell;
+            obj.ChiCoeffs.Indices = chi_nlm_rst_cell;
             obj.ChiCoeffs.Order = obj.Settings.Order;
             
         end
