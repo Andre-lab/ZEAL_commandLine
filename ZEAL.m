@@ -1,4 +1,4 @@
-classdef ZEAL < handle
+classdef ZEAL < dataConfiguration
     %ZEAL Class to perform shape-based superposition of proteins.
     %   See description in the ZEAL method below for input details and
     %   usage or the manual at https://andre-lab.github.io/ZEAL/
@@ -14,8 +14,6 @@ classdef ZEAL < handle
     % TODO: Add event listeners so that ZEAL responds automatically when
     % Settings property is chanegd -> recompute shapeFunction or ZC moments
     % or ZEALscore etc. Useful when we will build the GUI from this class
-    %
-    % TODO: save2PDB method
     %
     % TODO: Unit tests
     %
@@ -34,7 +32,7 @@ classdef ZEAL < handle
         AlignMode % true/false
         % true if ZEAL should align (2 shapes defined), otherwise
         % compute shape descriptors (1 shape defined)
-        ChiCoeffs   % holder for values and indices for chi coeffs
+        %ChiCoeffs   % holder for values and indices for chi coeffs
         Logging
         AlignLater % true/false (false by default)
         % if true then ZEAL will not start aligning automatically
@@ -478,30 +476,35 @@ classdef ZEAL < handle
             
         end
         
-        function loadChiCoeffs(obj)
-            % loadChiCoeffs Loads the object-independent chi coefficients
-            % used for the ZC moment computation. The folder path is taken from
-            % obj.Settings.ChiCoeffPath and the files themself are assumed to
-            % be mat-files with name 'chiCoeffs_order_X.mat', where X is the
-            % ZC order.
-            
-            chiCoeffFilename = sprintf('chiCoeffs_order_%d.mat', obj.Settings.Order);
-            
-            chiCoeffDataPath = fullfile(obj.Settings.ChiCoeffPath, chiCoeffFilename);
-            
-%             if ~exist('chi_coeff_cell','var')
+%         function loadChiCoeffs(obj)
+% %             % loadChiCoeffs Loads the object-independent chi coefficients
+% %             % used for the ZC moment computation. The folder path is taken from
+% %             % obj.Settings.ChiCoeffPath and the files themself are assumed to
+% %             % be mat-files with name 'chiCoeffs_order_X.mat', where X is the
+% %             % ZC order.
+% %             
+% %             chiCoeffFilename = sprintf('chiCoeffs_order_%d.mat', obj.Settings.Order);
+% %             
+% %             chiCoeffDataPath = fullfile(obj.Settings.ChiCoeffPath, chiCoeffFilename);
+% %             
+% %             if ~exist('chi_coeff_cell','var')
 % %                 if obj.Logging.Level > 2
-%                     fprintf('\n Loading Chi coefficients from file:\n\t %s', chiCoeffDataPath);
+% %                     fprintf('\n Loading Chi coefficients from file:\n\t %s', chiCoeffDataPath);
 % %                 end
-%                 
-                load(chiCoeffDataPath,'chi_coeff_cell', 'chi_nlm_rst_cell');
-%             end
-            
-            obj.ChiCoeffs.Values = chi_coeff_cell;
-            obj.ChiCoeffs.Indices = chi_nlm_rst_cell;
-            obj.ChiCoeffs.Order = obj.Settings.Order;
-            
-        end
+% %                 
+% %                 load(chiCoeffDataPath,'chi_coeff_cell', 'chi_nlm_rst_cell');
+% %             else
+% %                 
+% %                 fprintf('\n ');
+% % 
+% %                 
+% %             end
+% %             
+% %             obj.ChiCoeffs.Values = chi_coeff_cell;
+% %             obj.ChiCoeffs.Indices = chi_nlm_rst_cell;
+% %             obj.ChiCoeffs.Order = obj.Settings.Order;
+%             
+%         end
         
         function Score = computeScore(obj)
             % computeScore Compute the ZEAL score for the shape superposition.
@@ -541,9 +544,9 @@ classdef ZEAL < handle
             
         end
         
-        function save2pdb(obj,varargin)
+        function saveSuccessFul = save2pdb(obj,varargin)
             % save2pdb Export strucure to pdb file
-            % By default, ff both structures exist in the object (fixed and rotated)
+            % By default, if both structures exist in the object (fixed and rotated)
             % then those are exported to pdbfiles in the current folder.
             % The fixed strucure is exported if ZEAL is run in 'single
             % structure' mode (i.e. shape analysis of one structure = the fixed structure).
@@ -551,13 +554,13 @@ classdef ZEAL < handle
             % OPTIONAL INPUT
             %'name'-value pairs : type : default value {expected}
             %
-            % 'structure'       :   char : 'all'  {'fixed','rotating','all'}       
+            % 'structure'       :   char : 'all'  {'fixed','rotating','all'}
             %
             % 'includeHetatoms' :   logical : false {true/false}
             %
             % 'includeAll'      :   logical : false {true/false}
             %
-            % 'folderPath'      :   char : current directory 
+            % 'folderPath'      :   char : current directory
             %
             
             
@@ -569,11 +572,13 @@ classdef ZEAL < handle
                 defaultStructure = 'fixed';
             end
             
+            % set defaults
             defaultPath = pwd;
             
             defaultHetatoms = false;
             defaultAll = false;
             
+            % do option parsing
             p = inputParser;
             
             addOptional(p, 'structure', defaultStructure, @(x) any(validatestring(x,expectedStructures)));
@@ -589,71 +594,82 @@ classdef ZEAL < handle
             includeAll = p.Results.includeAll;
             folderpath = p.Results.folderPath;
             
+            saveSuccessFul = false;
             
-            if strcmp(selectedStructure,'fixed') ||  strcmp(selectedStructure,'all')
+            try
                 
-                selection = obj.fixed.PDB.Selection;
-                
-                if includeHetatoms || includeAll
-                    selection.includeHetatoms = includeHetatoms;
+                if strcmp(selectedStructure,'fixed') ||  strcmp(selectedStructure,'all')
+                    
+                    selection = obj.fixed.PDB.Selection;
+                    
+                    if includeHetatoms || includeAll
+                        selection.includeHetatoms = includeHetatoms;
+                    end
+                    
+                    if includeAll
+                        selection.chainID = 'all';
+                        selection.altLocID = 'all';
+                    end
+                    
+                    pdbData = PDB.parsePDBstruct(obj.fixed.PDB.AllData, selection);
+                    
+                    T = getTranslationMatrix(obj, 'fixed');
+                    R = getRotationMatrix(obj, 'fixed');
+                    
+                    xyz = [pdbData.X pdbData.Y pdbData.Z];
+                    
+                    xyzRot = [ xyz ones(length(xyz),1)] * T * R;
+                    
+                    pdbData.X = xyzRot(:,1);
+                    pdbData.Y = xyzRot(:,2);
+                    pdbData.Z = xyzRot(:,3);
+                    
+                    [~, name, ~] = fileparts(obj.fixed.Name);
+                    filePath=fullfile(folderpath, [name '_ZEAL.pdb']);
+                    
+                    exportPdb(obj, 'fixed', pdbData, filePath)
+                    
                 end
                 
-                if includeAll
-                    selection.chainID = 'all';
-                    selection.altLocID = 'all';
+                
+                if strcmp(selectedStructure,'rotating') ||  strcmp(selectedStructure,'all')
+                    
+                    selection = obj.rotating.PDB.Selection;
+                    
+                    if includeHetatoms || includeAll
+                        selection.includeHetatoms = includeHetatoms;
+                    end
+                    
+                    if includeAll
+                        selection.chainID = 'all';
+                        selection.altLocID = 'all';
+                    end
+                    
+                    pdbData = PDB.parsePDBstruct(obj.rotating.PDB.AllData, selection);
+                    
+                    T = getTranslationMatrix(obj, 'rotating');
+                    R = getRotationMatrix(obj, 'rotating');
+                    
+                    xyz = [pdbData.X pdbData.Y pdbData.Z];
+                    
+                    xyzRot = [ xyz ones(length(xyz),1)] * T * R;
+                    
+                    pdbData.X = xyzRot(:,1);
+                    pdbData.Y = xyzRot(:,2);
+                    pdbData.Z = xyzRot(:,3);
+                    
+                    [~, name, ~] = fileparts(obj.rotating.Name);
+                    filePath=fullfile(folderpath, [name '_ZEAL.pdb']);
+                    
+                    exportPdb(obj, 'rotating', pdbData, filePath)
+                    
                 end
                 
-                pdbData = PDB.parsePDBstruct(obj.fixed.PDB.AllData, selection);
+                saveSuccessFul = true;
                 
-                T = getTranslationMatrix(obj, 'fixed');
-                R = getRotationMatrix(obj, 'fixed');
-                
-                xyz = [pdbData.X pdbData.Y pdbData.Z];
-                
-                xyzRot = [ xyz ones(length(xyz),1)] * T * R;
-                
-                pdbData.X = xyzRot(:,1);
-                pdbData.Y = xyzRot(:,2);
-                pdbData.Z = xyzRot(:,3);
-                
-                [~, name, ~] = fileparts(obj.fixed.Name);
-                filePath=fullfile(folderpath, [name '_ZEAL.pdb']);
-                
-                exportPdb(obj, 'fixed', pdbData, filePath)
-                
-            end
-            
-            
-            if strcmp(selectedStructure,'rotating') ||  strcmp(selectedStructure,'all')
-                
-                selection = obj.rotating.PDB.Selection;
-                
-                if includeHetatoms || includeAll
-                    selection.includeHetatoms = includeHetatoms;
-                end
-                
-                if includeAll
-                    selection.chainID = 'all';
-                    selection.altLocID = 'all';
-                end
-                
-                pdbData = PDB.parsePDBstruct(obj.rotating.PDB.AllData, selection);
-                
-                T = getTranslationMatrix(obj, 'rotating');
-                R = getRotationMatrix(obj, 'rotating');
-                
-                xyz = [pdbData.X pdbData.Y pdbData.Z];
-                
-                xyzRot = [ xyz ones(length(xyz),1)] * T * R;
-                
-                pdbData.X = xyzRot(:,1);
-                pdbData.Y = xyzRot(:,2);
-                pdbData.Z = xyzRot(:,3);
-                
-                [~, name, ~] = fileparts(obj.rotating.Name);
-                filePath=fullfile(folderpath, [name '_ZEAL.pdb']);
-                
-                exportPdb(obj, 'rotating', pdbData, filePath)
+            catch ME
+                              
+                rethrow(ME)
                 
             end
             
@@ -924,11 +940,8 @@ classdef ZEAL < handle
             end
             
         end
-        
-        
+                
     end
-    
-    
-    
+   
 end
 
