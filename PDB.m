@@ -176,7 +176,7 @@ classdef PDB < handle
                         
                         obj.Selection.chainID = name(5);
                     end
-                    
+                        
                     if obj.ShowLog
                         fprintf('\n Filtering CIF-data:');
                         
