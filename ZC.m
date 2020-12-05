@@ -37,7 +37,7 @@ classdef ZC < handle
         %                       components of the moments respectively.
         Descriptors % vector: the real-valued ZC shape descriptor 
         ShapeFunction % 3D matrix: the cubic grid with voxel-values defining the shape function
-        ChiCoeffs   % : struct with fields (from ZC.computeChiCoeffs in this class)
+        ChiCoeffs   % : object (ChiCoeffs class)
         %
         %      Values  : 3d cell array
         %      Indices : 3d cell arrayx
@@ -83,7 +83,7 @@ classdef ZC < handle
             % set required
             addRequired(p, 'shapeFunction', @(x)validateattributes(x,{'numeric', 'logical'}, {'nonempty'}, 'shapeFunction'));
             addRequired(p, 'order', @(x)validateattributes(x,{'numeric'}, {'nonempty','integer','positive'}, 'order'));
-            addRequired(p, 'chiCoeffs', @(x)validateattributes(x,{'struct'}, {'nonempty'}, 'chiCoeffs'));
+            addRequired(p, 'chiCoeffs');
             
             % set optional
             addOptional(p, 'scaleOption', defaultScaleOption, @(x)validateattributes(x,{'numeric'}, {'nonempty','integer','>=1','<=3'}, 'scaleOption'));
