@@ -1,4 +1,4 @@
-classdef ZEAL < dataConfiguration
+classdef ZEAL < handle
     %ZEAL Class to perform shape-based superposition of proteins.
     %   See description in the ZEAL method below for input details and
     %   usage or the manual at https://andre-lab.github.io/ZEAL/
@@ -32,12 +32,19 @@ classdef ZEAL < dataConfiguration
         AlignMode % true/false
         % true if ZEAL should align (2 shapes defined), otherwise
         % compute shape descriptors (1 shape defined)
-        %ChiCoeffs   % holder for values and indices for chi coeffs
+        
         Logging
         AlignLater % true/false (false by default)
         % if true then ZEAL will not start aligning automatically
     end
     
+    properties (Constant)
+        ChiCoeffs = ChiCoeffs % a singleton object (ChiCoeffs class) shared
+                              % by all instances (behaves like a "global" variable)
+                              % the coefficients are visible for all
+                              % instances of ZEAL, but they are only loaded
+                              % to memory once
+    end
     
     methods
         function obj = ZEAL(fix, varargin)
@@ -303,7 +310,6 @@ classdef ZEAL < dataConfiguration
             
             
             % --- Computing ZC moments ---
-            loadChiCoeffs(obj);
             
             if obj.Logging.Level > 0
                 fprintf('\n Computing ZC moments for fixed structure');
@@ -474,6 +480,11 @@ classdef ZEAL < dataConfiguration
                     stop = true;
             end
             
+        end
+        
+        function reloadChiCoeffs(obj, varargin)
+            % reloads chicoeffs using the master class ChiCoeff
+            obj.ChiCoeff.loadData(obj, varargin{:}); %all instances of ZEAL will see the newly loaded chi coeffs
         end
         
 %         function loadChiCoeffs(obj)
