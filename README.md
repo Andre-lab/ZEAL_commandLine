@@ -16,11 +16,12 @@ ZEAL depends on the following classes
 
 
 
-   -  **PDB.m**             Handles reading/fetching/parsing of PDB files 
+   -  **PDB.m **             Handles reading/fetching/parsing of PDB files 
    -  **molShape.m**    Generates a molecular shape function (the molecular surface by default) from PDB object data 
    -  **ZC.m**                 Handles computation of Zernike-Canterakis moments and shape reconstruction 
 
 ## Toolboxes
+
 
 ZEAL uses functions from these toolboxes which have to be installed (included in [MATLAB Runtime](https://www.mathworks.com/products/compiler/matlab-runtime.html) if ZEAL run as standalone program)
 
@@ -46,7 +47,7 @@ ZEAL uses functions from these toolboxes which have to be installed (included in
 # Input
 
 
-ZEAL can be run in two modes depending on if one or two protein structures are given as input. Protein structrues can either be given as files (`'filename.pdb'` or ` `'`filepath/filename.pdb'` if not in same directory ) or as 4-letter PDB ID codes (eg. '5MOK'). If a 5-letter PDB ID code is given (eg. '5MOKA'), then the last letter is assumed to be the chain ID ('A') that should be selected for analysis. By default, the A chain of the structure (first model if several exist) is used, excluding hydrogen atoms and any heteroatoms. If any alternate atom locations are defined, the 'A' state is selected. See the section *Changing default parameters* to change what structure data should be used in the analysis.  
+ZEAL can be run in two modes depending on if one or two protein structures are given as input. Protein structrues can either be given as files (`'filename.pdb'` or ` `'`filepath/filename.pdb'` if not in same directory ) or as 4-letter PDB ID codes (eg. '5MOK'). If a 5-letter PDB ID code is given (eg. '5MOKA'), then the last letter is assumed to be the chain ID ('A') that should be selected for analysis. By default, the A chain of the structure (first model if several exist) is used, excluding hydrogen atoms and any heteroatoms. If any alternate atom locations are defined, the 'A' state is selected. See the section \hyperref{H_56E64AE2}{Changing default parameters} to change what structure data should be used in the analysis.  
 
 
   
@@ -63,6 +64,7 @@ shapeData_pdbFile = ZEAL('5mok.pdb'); % -> reads pdb file
 
 
 ```text:Output
+Running ZEAL in single mode
  Importing fixed structure: 5mok.pdb
  Computing shape function for fixed structure
  Computing ZC moments for fixed structure
@@ -75,6 +77,7 @@ shapeData = ZEAL('5mokA'); % -> downloads the structure from PDB
 
 
 ```text:Output
+Running ZEAL in single mode
  Importing fixed structure: 5mokA
  Computing shape function for fixed structure
  Computing ZC moments for fixed structure
@@ -95,6 +98,7 @@ shapeAlignData = ZEAL('5mokA', 'rot', '2ho1A'); % -> Downloads structures and pe
 
 
 ```text:Output
+Running ZEAL in Align mode
  Importing fixed structure: 5mokA
  Importing rotating structure: 2ho1A
  Computing shape function for fixed structure
@@ -111,21 +115,24 @@ shapeAlignData = ZEAL('5mokA', 'rot', '2ho1A'); % -> Downloads structures and pe
  ----------------------------------------------------------------------------
  Current best score      Euler (zyz)         iteration       time (s) 
  ----------------------------------------------------------------------------
-	 0.30 		 0.00 0.00 0.00 	 0 		  0.2
-	 0.50 		 3.14 1.57 3.14 	 1 		  0.3
-	 0.56 		 4.73 2.03 2.59 	 20 		  3.3
-	 0.56 		 4.23 1.84 2.76 	 22 		  3.7
-	 0.68 		 4.29 1.85 2.36 	 27 		  4.4
-	 0.76 		 4.02 1.76 2.12 	 31 		  5.1
-	 0.77 		 3.99 1.61 2.10 	 39 		  6.3
-	 0.79 		 3.77 1.65 2.03 	 47 		  7.6
+	 0.31 		 0.00 0.00 0.00 	 0 		  0.2
+	 0.51 		 3.14 1.57 3.14 	 1 		  0.4
+	 0.58 		 4.82 2.03 2.56 	 20 		  3.5
+	 0.61 		 4.91 1.92 2.18 	 23 		  4.0
+	 0.62 		 4.63 2.09 1.78 	 27 		  4.7
+	 0.70 		 4.45 2.04 2.08 	 31 		  5.4
+	 0.74 		 4.15 1.92 1.89 	 34 		  5.9
+	 0.78 		 3.87 1.75 1.87 	 35 		  6.1
+	 0.79 		 4.03 1.71 2.05 	 43 		  7.4
+	 0.80 		 3.83 1.63 2.12 	 51 		  9.0
+	 0.81 		 3.77 1.62 2.12 	 109 		 21.9
  ----------------------------------------------------------------------------
 
-	Search completed after 52.1 s.
+	Search completed after 59.9 s.
 
-	Best score 0.79 found after 47 iterations (7.6 s)
+	Best score 0.81 found after 109 iterations (21.9 s)
 
-	using Euler angles (zyz) [3.770 1.649 2.029]
+	using Euler angles (zyz) [3.766 1.616 2.120]
 
  /////////////////////////////////////////////////////////////////////////////
 ```
@@ -133,7 +140,7 @@ shapeAlignData = ZEAL('5mokA', 'rot', '2ho1A'); % -> Downloads structures and pe
 # Output
 
 
-**Single mode** The shape descriptors and ZC moments are accessed from the property `fixed.ZC.Descriptors` 
+**Single mode **The shape descriptors and ZC moments are accessed from the property `fixed.ZC.Descriptors` 
 
 
 
@@ -144,16 +151,16 @@ shapeData.fixed.ZC.Descriptors
 
 ```text:Output
 ans = 121x1    
-    0.0158
+    0.0272
     0.0000
-    0.0251
-    0.0041
-    0.0013
+    0.0440
+    0.0069
+    0.0021
+    0.0027
+    0.0343
+    0.0190
     0.0016
-    0.0185
-    0.0109
-    0.0010
-    0.0039
+    0.0068
 
 ```
 
@@ -179,7 +186,7 @@ where the field `Values` contains the complex-valued moments, `Indiceslist` cont
   
 
 
-**Align mode** The shape descriptors and ZC moments for the rotating structure can be access as above, but from the property `rotating`  instead. The ZEAL score is accessed with
+**Align mode **The shape descriptors and ZC moments for the rotating structure can be access as above, but from the property `rotating`  instead. The ZEAL score is accessed with
 
 
 
@@ -189,7 +196,7 @@ shapeAlignData.Score
 
 
 ```text:Output
-ans = 0.7925
+ans = 0.8153
 ```
 
 
@@ -204,7 +211,7 @@ shapeAlignData.ZCDdistance
 
 
 ```text:Output
-ans = 0.0152
+ans = 0.0253
 ```
 
   
@@ -214,34 +221,31 @@ ans = 0.0152
 
 The parameters listed below are set by default, but can be changed (described in \hyperref{H_56E64AE2}{Changing default settings}). 
 
-
-
-```matlab:Code
-settingsTable = getZEALSettingsTable()
-```
-
-| |parameter|type|default value|expected values|description|
+### Shape 
+|parameter|type|default value|expected values|description|
 |:--:|:--:|:--:|:--:|:--:|:--:|
-|1|'Order'|'integer'|20|'>0'|'The maximum expansi...|
-|2|'ChiCoeffPath'|'char'|'[pwd '/chi_coeffici...|'folder path'|'Path to folder with...|
-|3|'GridRes'|'integer'|64|'>0'|'The side length of ...|
-|4|'Shape'|'char'|'MS'|''MS'/ 'SAS'/ 'vdw'/...|'The type of molecul...|
-|5|'ProbeRadius'|'double'|1.4000|'>=0'|'The radius of the p...|
-|6|'SmearFactor'|'double'|0.3000|'>0, <1'|'Fraction of grid to...|
-|7|'ShellThickness'|'integer'|2|'>0'|'Thickness of surfac...|
-|8|'FunEvals'|'integer'|300|'>0'|'Number of ZEAL scor...|
-|9|'AlignLater'|'logical'|0|'true/false'|'If false then ZEAL ...|
-|10|'fix_includeHetatoms...|'logical'|0|'true/false'|'Flag to indicate if...|
-|11|'rot_includeHetatoms...|'logical'|0|'true/false'|'"---" in rotating s...|
-|12|'fix_includeHatoms'|'logical'|0|'true/false'|'Flag to indicate if...|
-|13|'rot_includeHatoms'|'logical'|0|'true/false'|'"---" in rotating s...|
-|14|'fix_chainID'|'char'|'A'|''all' or 1 letter'|'The chain ID that s...|
-|15|'rot_chainID'|'char'|'A'|''all' or 1 letter'|'"---" in rotating s...|
-|16|'fix_altLocID'|'char'|'A'|''all' or 1 letter'|'The ID of any atom ...|
-|17|'rot_altLocID'|'char'|'A'|''all' or 1 letter'|'"---" in rotating s...|
-|18|'fix_modelNumber'|'integer'|1|''|'The model number th...|
-|19|'rot_modelNumber'|'integer'|1|''|'"---" in rotating s...|
-|20|'LogLevel'|'char'|'standard'|''none'/ 'basic'/ 's...|'Determines the leve...|
+|'Order'|'integer'|20|'>0'|'The maximum expansi...|
+|'ChiCoeffPath'|'char'|'[pwd '/chi_coeffici...|'folder path'|'Path to folder with...|
+|'GridRes'|'integer'|64|'>0'|'The side length of ...|
+|'Shape'|'char'|'MS'|''MS'/ 'SAS'/ 'vdw'/...|'The type of molecul...|
+|'ProbeRadius'|'double'|1.4000|'>=0'|'The radius of the p...|
+|'SmearFactor'|'double'|0.3000|'>0, <1'|'Fraction of grid to...|
+|'ShellThickness'|'integer'|2|'>0'|'Thickness of surfac...|
+
+### Search
+|parameter|type|default value|expected values|description|
+|:--:|:--:|:--:|:--:|:--:|:--:|
+|'FunEvals'|'integer'|300|'>0'|'Number of ZEAL scor...|
+|'AlignLater'|'logical'|0|'true/false'|'If false then ZEAL ...|
+
+### Structure data
+|parameter|type|default value|expected values|description|
+|:--:|:--:|:--:|:--:|:--:|:--:|
+|'fix_includeHetatoms...|'logical'|0|'true/false'|'Flag to indicate if...|
+|'rot_includeHetatoms...|'logical'|0|'true/false'|'"---" in rotating s...|
+|'fix_includeHatoms'|'logical'|0|'true/false'|'Flag to indicate if...|
+|'rot_includeHatoms'|'logical'|0|'true/false'|'"---" in rotating s...|
+|'fix_chainID'|'char'|'A'|''all' or 1 letter'|'The chain ID that s...|
 
   
   
@@ -268,7 +272,7 @@ inputStruct.GridRes = 100;
 ZEAL('5mok', inputStruct)
 ```
 
-
+  
 # Saving
 
 
