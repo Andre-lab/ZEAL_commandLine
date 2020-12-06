@@ -139,44 +139,44 @@ Running ZEAL in Align mode
 
 # Output
 
+## Shape descriptors
 
-**Single mode **The shape descriptors and ZC moments are accessed from the property `fixed.ZC.Descriptors` 
-
-
+The shape descriptors are accessed from the property `fixed.ZC.Descriptors` (single / align mode) 
+or `rotating.ZC.Descriptors` (align mode only). 
 
 ```matlab:Code
 shapeData.fixed.ZC.Descriptors
+shapeData.rotating.ZC.Descriptors
 ```
 
-or using the get method `getShapeDescriptors`
+Alternatively, they can be pulled directly using the `getShapeDescriptors` method
+
 
 ```matlab:Code
-shapeData.getShapeDescriptors
+shapeData.getShapeDescriptors % -> fixed by default
+shapeData.getShapeDescriptors('fixed')
+shapeData.getShapeDescriptors('rotating')
 
 % or 
 
 getShapeDescriptors(shapeData)
+getShapeDescriptors(shapeData, 'fixed')
+getShapeDescriptors(shapeData, 'rottaing')
 
 ```
 
-```text:Output
-ans = 121x1    
-    0.0272
-    0.0000
-    0.0440
-    0.0069
-    0.0021
-    0.0027
-    0.0343
-    0.0190
-    0.0016
-    0.0068
+## ZC moments 
 
-```
+The moments are accessed from the property `fixed.ZC.Moments` (single / align mode) 
+or `rotating.ZC.Moments` (align mode only), which will retirn a Matlab structure  
+where the field `Values` contains the complex-valued moments, `Indiceslist` 
+contains the n,l,m indices (col 1-3) for each moment with real part (col 4)
+ and image part (col 5) separately. 
 
 
 ```matlab:Code
 shapeData.fixed.ZC.Moments
+shapeData.Rotating.ZC.Moments
 ```
 
 
@@ -188,30 +188,35 @@ ans =
 
 ```
 
+Alternatively, they can be pulled directly using the `getMoments` method
+```matlab:Code
+shapeData.getMoments % -> fixed by default
+shapeData.getMoments('fixed')
+shapeData.getMoments('rotating')
+
+% or 
+
+getMoments(shapeData)
+getMoments(shapeData, 'fixed')
+getMoments(shapeData, 'rottaing')
+
+```
 
 
-where the field `Values` contains the complex-valued moments, `Indiceslist` contains the n,l,m indices (col 1-3) for each moment with real part (col 4) and image part (col 5) separately. 
 
-
-  
-
-**Align mode **The shape descriptors and ZC moments for the rotating structure can be access as above, but from the property `rotating`  instead. The ZEAL score is accessed with
-
-
+## Shape similarity and ZEAL score (align mode only)
+ The ZEAL score is accessed with
 
 ```matlab:Code
 shapeAlignData.Score
 ```
-
 
 ```text:Output
 ans = 0.8153
 ```
 
 
-
-and the Euclidean distance between the shape descriptors with
-
+and the shape similairy (=Euclidean distance between the shape descriptorsm) with
 
 
 ```matlab:Code
@@ -223,70 +228,7 @@ shapeAlignData.ZCDdistance
 ans = 0.0253
 ```
 
-  
-  
-# Optional input
-
-
-The parameters listed below are set by default, but can be changed (described in \hyperref{H_56E64AE2}{Changing default parameters}). 
-
-### Shape 
-|parameter|type|default value|expected values|description|
-|:--:|:--:|:--:|:--:|:--:|
-|'Order' | 'integer' | 20 | '>0' | The maximum expansion order of ZC moments.|
-|'ChiCoeffPath' | 'char' | [pwd '/chi_coefficients'] | 'folder path' | Path to folder with pre-computed chi coefficients for order N with name  `chiCoeffs_order_N.mat`. Use ZC.computeChiCoeffs to compute them.|
-|'GridRes' | 'integer'|64|'>0' | The side length of the cubic grid.|
-|'Shape' | 'char'|'MS'| 'MS'/ 'SAS'/ 'vdw'/ 'electron_density' | The type of molecular shape function.|
-|'ProbeRadius' | 'double'|1.4000| '>=0' | The radius of the probe in Å used for the surface computations.|
-|'SmearFactor' | 'double'|0.3000| '>0, <1' | 'Fraction of grid to smear out atoms over when generating electron density.|
-|'ShellThickness' | 'integer'|2|' >0' | Thickness of surfaces (shells) in grid units.|
-
-### Search
-|parameter|type|default value|expected values|description|
-|:--:|:--:|:--:|:--:|:--:|
-|'FunEvals' | 'integer' | 300 | '>0'| Number of ZEAL score evaluations until search stops..|
-|'AlignLater' | 'logical' | 0 | 'true/false'| If false then ZEAL will not automatically align upon object construction. Manually start alignment using `shapeAlign(ZEALobject)` or `ZEALobject.shapeAlign()` .|
-
-### PDB/CIF data
-|parameter|type|default value|expected values|description|
-|:--:|:--:|:--:|:--:|:--:|
-|'fix_includeHetatoms | 'logical' |0| 'true/false' | Flag to indicate if HETATM records should be included in fixed structure.|
-|'rot_includeHetatoms | 'logical' |0| 'true/false' | "---" in rotating structure.|
-|'fix_includeHatoms' | 'logical' |0| 'true/false' | Flag to indicate if Hydrogen atoms should be included (if exists) in fixed structure..|
-|'rot_includeHatoms' | 'logical' |0| 'true/false' | "---" in rotating structure.|
-|'fix_chainID'|'char' | 'all' | 'all' or 1 letter' | The chain ID that should be selected (''all'' = all chains) in fixed structure.|
-|'rot_chainID'|'char' | 'all' | 'all' or 1 letter' | "---" in rotating structure.|
-|'fix_altLocID' |  'integer' | 'A' | 'all' or 1 letter' | The ID of any atom altlocs that should be selected in fixed structure. Use ''all'' to include all altlocs. |
-|'rot_altLocID' |  'integer' | 'A' | 'all' or 1 letter' | "---" in rotating structure. |
-  
-
-
-# Changing default parameters
-
-
-All parameters above can be changed by giving a comma-seperated argument list to ZEAL, or as a Matlab structure with fields equal to names of parameters. 
-
-
-### Example: Using argument list
-
-```matlab:Code(Display)
-ZEAL('5mok','fix_chainID','B') % selects chain B for shape analysis 
-ZEAL('5mok','fix_chainID','B', 'Shape', 'SAS', 'GridRes', 100) % + sets the solvent accessible surface as the shape function computed on a 100x100x100 grid
-```
-
-### Example: Using input structure
-
-```matlab:Code(Display)
-inputStruct.fix_chainID = 'B';
-inputStruct.Shape = 'SAS';
-inputStruct.GridRes = 100;
-
-ZEAL('5mok', inputStruct)
-```
-
-  
-# Saving
-
+## Structures
 
 Aligned structrues can be saved to PDB files using the save2pdb method. By default, both the fixed and rotating structure are exported to the current directory (see below on how to change). The names of the new pdb files have the format `originalname_ZEAL.pdb `(this can't be changed)`. `Also, HETATM records are omitted but this can be changed (se below).
 
@@ -357,4 +299,66 @@ save2pdb(shapeAlignData, 'folderPath', '/Users/yourUserName/Desktop')
 
 shapeAlignData.save2pdb('folderPath', '/Users/yourUserName/Desktop')
 ```
+
+  
+# Optional input
+
+
+The parameters listed below are set by default, but can be changed (described in \hyperref{H_56E64AE2}{Changing default parameters}). 
+
+### Shape 
+|parameter|type|default value|expected values|description|
+|:--:|:--:|:--:|:--:|:--:|
+|'Order' | 'integer' | 20 | '>0' | The maximum expansion order of ZC moments.|
+|'ChiCoeffPath' | 'char' | [pwd '/chi_coefficients'] | 'folder path' | Path to folder with pre-computed chi coefficients for order N with name  `chiCoeffs_order_N.mat`. Use ZC.computeChiCoeffs to compute them.|
+|'GridRes' | 'integer'|64|'>0' | The side length of the cubic grid.|
+|'Shape' | 'char'|'MS'| 'MS'/ 'SAS'/ 'vdw'/ 'electron_density' | The type of molecular shape function.|
+|'ProbeRadius' | 'double'|1.4000| '>=0' | The radius of the probe in Å used for the surface computations.|
+|'SmearFactor' | 'double'|0.3000| '>0, <1' | 'Fraction of grid to smear out atoms over when generating electron density.|
+|'ShellThickness' | 'integer'|2|' >0' | Thickness of surfaces (shells) in grid units.|
+
+### Search
+|parameter|type|default value|expected values|description|
+|:--:|:--:|:--:|:--:|:--:|
+|'FunEvals' | 'integer' | 300 | '>0'| Number of ZEAL score evaluations until search stops..|
+|'AlignLater' | 'logical' | 0 | 'true/false'| If false then ZEAL will not automatically align upon object construction. Manually start alignment using `shapeAlign(ZEALobject)` or `ZEALobject.shapeAlign()` .|
+
+### PDB/CIF data
+|parameter|type|default value|expected values|description|
+|:--:|:--:|:--:|:--:|:--:|
+|'fix_includeHetatoms | 'logical' |0| 'true/false' | Flag to indicate if HETATM records should be included in fixed structure.|
+|'rot_includeHetatoms | 'logical' |0| 'true/false' | "---" in rotating structure.|
+|'fix_includeHatoms' | 'logical' |0| 'true/false' | Flag to indicate if Hydrogen atoms should be included (if exists) in fixed structure..|
+|'rot_includeHatoms' | 'logical' |0| 'true/false' | "---" in rotating structure.|
+|'fix_chainID'|'char' | 'all' | 'all' or 1 letter' | The chain ID that should be selected (''all'' = all chains) in fixed structure.|
+|'rot_chainID'|'char' | 'all' | 'all' or 1 letter' | "---" in rotating structure.|
+|'fix_altLocID' |  'integer' | 'A' | 'all' or 1 letter' | The ID of any atom altlocs that should be selected in fixed structure. Use ''all'' to include all altlocs. |
+|'rot_altLocID' |  'integer' | 'A' | 'all' or 1 letter' | "---" in rotating structure. |
+  
+
+
+## Changing default parameters
+
+
+All parameters above can be changed by giving a comma-seperated argument list to ZEAL, or as a Matlab structure with fields equal to names of parameters. 
+
+
+### Example: Using argument list
+
+```matlab:Code(Display)
+ZEAL('5mok','fix_chainID','B') % selects chain B for shape analysis 
+ZEAL('5mok','fix_chainID','B', 'Shape', 'SAS', 'GridRes', 100) % + sets the solvent accessible surface as the shape function computed on a 100x100x100 grid
+```
+
+### Example: Using input structure
+
+```matlab:Code(Display)
+inputStruct.fix_chainID = 'B';
+inputStruct.Shape = 'SAS';
+inputStruct.GridRes = 100;
+
+ZEAL('5mok', inputStruct)
+```
+
+  
 
