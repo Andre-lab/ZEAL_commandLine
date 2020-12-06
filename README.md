@@ -148,6 +148,16 @@ Running ZEAL in Align mode
 shapeData.fixed.ZC.Descriptors
 ```
 
+or using the get method `getShapeDescriptors`
+
+```matlab:Code
+shapeData.getShapeDescriptors
+
+% or 
+
+getShapeDescriptors(shapeData)
+
+```
 
 ```text:Output
 ans = 121x1    
@@ -184,7 +194,6 @@ where the field `Values` contains the complex-valued moments, `Indiceslist` cont
 
 
   
-
 
 **Align mode **The shape descriptors and ZC moments for the rotating structure can be access as above, but from the property `rotating`  instead. The ZEAL score is accessed with
 
@@ -236,7 +245,7 @@ The parameters listed below are set by default, but can be changed (described in
 |parameter|type|default value|expected values|description|
 |:--:|:--:|:--:|:--:|:--:|
 |'FunEvals' | 'integer' | 300 | '>0'| Number of ZEAL score evaluations until search stops..|
-|'AlignLater' | 'logical' | 0 | 'true/false'| If false then ZEAL will not automatically align upon object construction. Manually start alignment using ´shapeAlign(ZEALobject)´ or ´ZEALobject.shapeAlign()´ .|
+|'AlignLater' | 'logical' | 0 | 'true/false'| If false then ZEAL will not automatically align upon object construction. Manually start alignment using `shapeAlign(ZEALobject)` or `ZEALobject.shapeAlign()` .|
 
 ### PDB/CIF data
 |parameter|type|default value|expected values|description|
@@ -285,6 +294,11 @@ Aligned structrues can be saved to PDB files using the save2pdb method. By defau
 
 ```matlab:Code
 save2pdb(shapeAlignData)
+
+% or 
+
+shapeAlignData.save2pdb
+
 ```
 
 
@@ -303,6 +317,11 @@ To export ***all records***, use
 
 ```matlab:Code(Display)
 save2pdb(shapeAlignData, 'includeAll', true)
+
+% or 
+
+shapeAlignData.save2pdb('includeAll', true)
+
 ```
 
 
@@ -318,6 +337,11 @@ To ***include HETATM records***, use
 
 ```matlab:Code(Display)
 save2pdb(shapeAlignData, 'includeHetatoms', true)
+
+% or 
+
+shapeAlignData.save2pdb('includeHetatoms', true)
+
 ```
 
 
@@ -328,5 +352,9 @@ To ***save to specific directory***, use
 
 ```matlab:Code(Display)
 save2pdb(shapeAlignData, 'folderPath', '/Users/yourUserName/Desktop')
+
+% or 
+
+shapeAlignData.save2pdb('folderPath', '/Users/yourUserName/Desktop')
 ```
 
