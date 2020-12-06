@@ -223,7 +223,7 @@ The parameters listed below are set by default, but can be changed (described in
 
 ### Shape 
 |parameter|type|default value|expected values|description|
-|:--:|:--:|:--:|:--:|:--:|:--:|
+|:--:|:--:|:--:|:--:|:--:|
 |'Order'|'integer'|20|'>0'|'The maximum expansi...|
 |'ChiCoeffPath'|'char'|'[pwd '/chi_coeffici...|'folder path'|'Path to folder with...|
 |'GridRes'|'integer'|64|'>0'|'The side length of ...|
@@ -234,13 +234,13 @@ The parameters listed below are set by default, but can be changed (described in
 
 ### Search
 |parameter|type|default value|expected values|description|
-|:--:|:--:|:--:|:--:|:--:|:--:|
+|:--:|:--:|:--:|:--:|:--:|
 |'FunEvals'|'integer'|300|'>0'|'Number of ZEAL scor...|
 |'AlignLater'|'logical'|0|'true/false'|'If false then ZEAL ...|
 
 ### Structure data
 |parameter|type|default value|expected values|description|
-|:--:|:--:|:--:|:--:|:--:|:--:|
+|:--:|:--:|:--:|:--:|:--:|
 |'fix_includeHetatoms...|'logical'|0|'true/false'|'Flag to indicate if...|
 |'rot_includeHetatoms...|'logical'|0|'true/false'|'"---" in rotating s...|
 |'fix_includeHatoms'|'logical'|0|'true/false'|'Flag to indicate if...|
