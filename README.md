@@ -222,13 +222,11 @@ ans = 0.0253
 The parameters listed below are set by default, but can be changed (described in \hyperref{H_56E64AE2}{Changing default settings}). 
 
 ### Shape 
-
-1. 'Order'|'integer'|20|'>0'
-	The maximum expansi...
-2. 'ChiCoeffPath'|'char'|'[pwd '/chi_coeffici...|'folder path'
-	Path to folder with...
-3. 'GridRes'|'integer'|64|'>0'|'The side length of ...|
-
+|parameter|type|default value|expected values|description|
+|:--:|:--:|:--:|:--:|:--:|
+|'Order'|'integer'|20|'>0'|'The maximum expansion order of ZC moments.|
+|'ChiCoeffPath'|'char'|'[pwd '/chi_coeffici...|'folder path'|'Path to folder with...|
+|'GridRes'|'integer'|64|'>0'|'The side length of ...|
 |'Shape'|'char'|'MS'|''MS'/ 'SAS'/ 'vdw'/...|'The type of molecul...|
 |'ProbeRadius'|'double'|1.4000|'>=0'|'The radius of the p...|
 |'SmearFactor'|'double'|0.3000|'>0, <1'|'Fraction of grid to...|
