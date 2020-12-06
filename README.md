@@ -219,36 +219,39 @@ ans = 0.0253
 # Optional input
 
 
-The parameters listed below are set by default, but can be changed (described in \hyperref{H_56E64AE2}{Changing default settings}). 
+The parameters listed below are set by default, but can be changed (described in \hyperref{H_56E64AE2}{Changing default parameters}). 
 
 ### Shape 
 |parameter|type|default value|expected values|description|
 |:--:|:--:|:--:|:--:|:--:|
-|'Order'|'integer'|20|'>0'|<span style="font-size:1em;"> 'The maximum expansion order of ZC moments.</span>|
-|'ChiCoeffPath'|'char'|'[pwd '/chi_coeffici...|'folder path'|'Path to folder with...|
-|'GridRes'|'integer'|64|'>0'|'The side length of ...|
-|'Shape'|'char'|'MS'|''MS'/ 'SAS'/ 'vdw'/...|'The type of molecul...|
-|'ProbeRadius'|'double'|1.4000|'>=0'|'The radius of the p...|
-|'SmearFactor'|'double'|0.3000|'>0, <1'|'Fraction of grid to...|
-|'ShellThickness'|'integer'|2|'>0'|'Thickness of surfac...|
+|'Order' | 'integer' | 20 | '>0' | The maximum expansion order of ZC moments.|
+|'ChiCoeffPath' | 'char' | [pwd '/chi_coefficients'] | 'folder path' | Path to folder with pre-computed chi coefficients for order N with name  `chiCoeffs_order_N.mat`. Use ZC.computeChiCoeffs to compute them.|
+|'GridRes' | 'integer'|64|'>0' | The side length of the cubic grid.|
+|'Shape' | 'char'|'MS'| 'MS'/ 'SAS'/ 'vdw'/ 'electron_density' | The type of molecular shape function.|
+|'ProbeRadius' | 'double'|1.4000| '>=0' | The radius of the probe in Å used for the surface computations.|
+|'SmearFactor' | 'double'|0.3000| '>0, <1' | 'Fraction of grid to smear out atoms over when generating electron density.|
+|'ShellThickness' | 'integer'|2|' >0' | Thickness of surfaces (shells) in grid units.|
 
 ### Search
 |parameter|type|default value|expected values|description|
 |:--:|:--:|:--:|:--:|:--:|
-|'FunEvals'|'integer'|300|'>0'|'Number of ZEAL scor...|
-|'AlignLater'|'logical'|0|'true/false'|'If false then ZEAL ...|
+|'FunEvals' | 'integer' | 300 | '>0'| Number of ZEAL score evaluations until search stops..|
+|'AlignLater' | 'logical' | 0 | 'true/false'| If false then ZEAL will not automatically align upon object construction. Manually start alignment using ´shapeAlign(ZEALobject)´ or ´ZEALobject.shapeAlign()´ .|
 
-### Structure data
+### PDB/CIF data
 |parameter|type|default value|expected values|description|
 |:--:|:--:|:--:|:--:|:--:|
-|'fix_includeHetatoms...|'logical'|0|'true/false'|'Flag to indicate if...|
-|'rot_includeHetatoms...|'logical'|0|'true/false'|'"---" in rotating s...|
-|'fix_includeHatoms'|'logical'|0|'true/false'|'Flag to indicate if...|
-|'rot_includeHatoms'|'logical'|0|'true/false'|'"---" in rotating s...|
-|'fix_chainID'|'char'|'A'|''all' or 1 letter'|'The chain ID that s...|
+|'fix_includeHetatoms | 'logical' |0| 'true/false' | Flag to indicate if HETATM records should be included in fixed structure.|
+|'rot_includeHetatoms | 'logical' |0| 'true/false' | "---" in rotating structure.|
+|'fix_includeHatoms' | 'logical' |0| 'true/false' | Flag to indicate if Hydrogen atoms should be included (if exists) in fixed structure..|
+|'rot_includeHatoms' | 'logical' |0| 'true/false' | "---" in rotating structure.|
+|'fix_chainID'|'char' | 'all' | 'all' or 1 letter' | The chain ID that should be selected (''all'' = all chains) in fixed structure.|
+|'rot_chainID'|'char' | 'all' | 'all' or 1 letter' | "---" in rotating structure.|
+|'fix_altLocID' |  'integer' | 'A' | 'all' or 1 letter' | The ID of any atom altlocs that should be selected in fixed structure. Use ''all'' to include all altlocs. |
+|'rot_altLocID' |  'integer' | 'A' | 'all' or 1 letter' | "---" in rotating structure. |
+  
 
-  
-  
+
 # Changing default parameters
 
 
