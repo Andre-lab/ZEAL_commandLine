@@ -214,10 +214,10 @@ classdef ZEAL < handle
             
             if isempty(p.Results.rot)
                 obj.AlignMode = false;
-                fprintf('\nRunning ZEAL in single mode');
+                fprintf('\n\n Running ZEAL in single mode');
             else % rot structure given -> align mode activated
                 obj.AlignMode = true;
-                fprintf('\nRunning ZEAL in Align mode');
+                fprintf('\n\n Running ZEAL in Align mode');
             end
             
             % --- Assign parameters ---
@@ -274,7 +274,7 @@ classdef ZEAL < handle
             
             % --- Import structures ---
             if obj.Logging.Level > 0
-                fprintf('\n Importing fixed structure: %s', obj.fixed.Name);
+                fprintf('\n\t Importing fixed structure: %s', obj.fixed.Name);
             end
             obj.fixed.PDB = PDB(obj.fixed.Name, obj.fixed.Selection);
            
@@ -287,7 +287,7 @@ classdef ZEAL < handle
                 obj.rotating.Selection.altLocID = p.Results.rot_altLocID;
                 
                 if obj.Logging.Level > 0
-                    fprintf('\n Importing rotating structure: %s', obj.rotating.Name);
+                    fprintf('\n\t Importing rotating structure: %s', obj.rotating.Name);
                 end
                 
                 obj.rotating.PDB = PDB(obj.rotating.Name, obj.rotating.Selection);
@@ -296,14 +296,14 @@ classdef ZEAL < handle
             
             % --- Compute shape functions ---
             if obj.Logging.Level > 0
-                fprintf('\n Computing shape function for fixed structure');
+                fprintf('\n\t Computing shape function for fixed structure');
             end
             
             obj.fixed.molShape = molShape(obj.fixed.PDB.Data, obj.Settings.molShape);
             
             if obj.AlignMode
                 if obj.Logging.Level > 0
-                    fprintf('\n Computing shape function for rotating structure');
+                    fprintf('\n\t Computing shape function for rotating structure');
                 end
                 obj.rotating.molShape = molShape(obj.rotating.PDB.Data, obj.Settings.molShape);
             end
@@ -312,7 +312,7 @@ classdef ZEAL < handle
             % --- Computing ZC moments ---
             
             if obj.Logging.Level > 0
-                fprintf('\n Computing ZC moments for fixed structure');
+                fprintf('\n\t Computing ZC moments for fixed structure');
             end
             
             obj.fixed.ZC = ZC(obj.fixed.molShape.FunctionData, obj.Settings.Order, obj.ChiCoeffs, 'ShowLog', obj.Settings.molShape.ShowLog);
@@ -320,7 +320,7 @@ classdef ZEAL < handle
             
             if obj.AlignMode
                 if obj.Logging.Level > 0
-                    fprintf('\n Computing ZC moments for rotating structure\n');
+                    fprintf('\n\t Computing ZC moments for rotating structure\n');
                 end
                 
                 obj.rotating.ZC = ZC(obj.rotating.molShape.FunctionData, obj.Settings.Order, obj.ChiCoeffs, 'ShowLog', obj.Settings.molShape.ShowLog);
@@ -426,7 +426,7 @@ classdef ZEAL < handle
                     
                     if obj.Logging.Level > 1
                         fprintf('\n ----------------------------------------------------------------------------');
-                        fprintf('\n Current best score      Euler (zyz)         iteration       time (s) ');
+                        fprintf('\n         Best score      Euler (zyz)         iteration       time (s) ');
                         fprintf('\n ----------------------------------------------------------------------------');
                     end
                     
