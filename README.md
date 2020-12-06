@@ -224,7 +224,7 @@ The parameters listed below are set by default, but can be changed (described in
 ### Shape 
 |parameter|type|default value|expected values|description|
 |:--:|:--:|:--:|:--:|:--:|
-|'Order'|'integer'|20|'>0'|<span style="font-size:2em;"> 'The maximum expansion order of ZC moments.</span>|
+|'Order'|'integer'|20|'>0'|<span style="font-size:1em;"> 'The maximum expansion order of ZC moments.</span>|
 |'ChiCoeffPath'|'char'|'[pwd '/chi_coeffici...|'folder path'|'Path to folder with...|
 |'GridRes'|'integer'|64|'>0'|'The side length of ...|
 |'Shape'|'char'|'MS'|''MS'/ 'SAS'/ 'vdw'/...|'The type of molecul...|
