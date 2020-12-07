@@ -27,10 +27,10 @@ ZEAL uses functions from these toolboxes which have to be installed (included in
 
 
    -  `gads_toolbox`                                 G*lobal Optimization Toolbox* 
-   -  `image_toolbox              `*Image Processing Toolbox* 
-   -  `optimization_toolbox       `*Optimization Toolbox**`   `* 
-   -  `statistics_toolbox         `*Statistics and Machine Learning Toolbox* 
-   -  `symbolic_toolbox           `*Symbolic Math Toolbox* 
+   -  `image_toolbox`              *Image Processing Toolbox* 
+   -  `optimization_toolbox`       *Optimization Toolbox*
+   -  `statistics_toolbox`         *Statistics and Machine Learning Toolbox* 
+   -  `symbolic_toolbox`           *Symbolic Math Toolbox* 
 
   
 # Abbreviations
