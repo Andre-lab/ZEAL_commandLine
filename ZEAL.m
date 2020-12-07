@@ -24,8 +24,8 @@ classdef ZEAL < handle
         rotating    % holder for data specific for rotating structure: PDB data, ZC moments etc
         Settings    % holder for various settings: PDB selection, ZC, shape function
         Search      % holder for data after alignment search
-        ZCDdistance % the Eucldiean distance between the shape descriptors of the fixed and rotating structure
-        Score       % the ZEAL score
+        ZCDdistance = [] % the Eucldiean distance between the shape descriptors of the fixed and rotating structure
+        Score = []      % the ZEAL score
     end
     
     properties (Hidden)
@@ -39,11 +39,13 @@ classdef ZEAL < handle
     end
     
     properties (Constant)
-        ChiCoeffs = ChiCoeffs % a singleton object (ChiCoeffs class) shared
-                              % by all instances (behaves like a "global" variable)
-                              % the coefficients are visible for all
+        ChiCoeffs = ChiCoeffs % A singleton  (=only one instance) object (ChiCoeffs class) 
+                              % that handles the loading of pre-computed
+                              % chi-coefficients from .mat-files
+                              % The coefficients are visible (like a "global" variable) for all
                               % instances of ZEAL, but they are only loaded
-                              % to memory once
+                              % to memory once. See also the 
+                              % reloadChiCoeffs method in this class.
     end
     
     methods
@@ -220,6 +222,7 @@ classdef ZEAL < handle
                 fprintf('\n\n Running ZEAL in Align mode');
             end
             
+                       
             % --- Assign parameters ---
             
             obj.Settings.Order = p.Results.Order;
@@ -236,6 +239,7 @@ classdef ZEAL < handle
             obj.AlignLater = p.Results.AlignLater;
             
             obj.Search.Performed = false;
+            obj.Search.EulerAngles = [0 0 0];
             
             obj.Logging.Display = p.Results.LogLevel;
             obj.Settings.molShape.ShowLog = false;
@@ -256,7 +260,7 @@ classdef ZEAL < handle
             
             % Set surrogate optimization options
             obj.Settings.SurrOpt = optimoptions('surrogateopt');
-            obj.Settings.SurrOpt.MaxFunctionEvaluations = p.Results.FunEvals;
+            obj.Settings.SurrOpt.MaxFunctionEvaluations = double(p.Results.FunEvals);
             obj.Settings.SurrOpt.PlotFcn = [];
             obj.Settings.SurrOpt.Display = 'none';
             obj.Settings.SurrOpt.OutputFcn = @(a1,a2,a3)surrOptiOutputFcn(a1,a2,a3,obj);
@@ -313,6 +317,11 @@ classdef ZEAL < handle
             
             if obj.Logging.Level > 0
                 fprintf('\n - Computing ZC moments for fixed structure');
+            end
+            
+            % Reload Chi Coeffs. if expansion order differs from default
+            if ~isequal(obj.Settings.Order, default_Order)
+                obj.reloadChiCoeffs('Order',obj.Settings.Order);
             end
             
             obj.fixed.ZC = ZC(obj.fixed.molShape.FunctionData, obj.Settings.Order, obj.ChiCoeffs, 'ShowLog', obj.Settings.molShape.ShowLog);
@@ -484,38 +493,9 @@ classdef ZEAL < handle
         
         function reloadChiCoeffs(obj, varargin)
             % reloads chicoeffs using the master class ChiCoeff
-            obj.ChiCoeff.loadData(obj, varargin{:}); %all instances of ZEAL will see the newly loaded chi coeffs
+            obj.ChiCoeffs.loadData(obj, varargin{:}); %all instances of ZEAL will see the newly loaded chi coeffs
         end
         
-%         function loadChiCoeffs(obj)
-% %             % loadChiCoeffs Loads the object-independent chi coefficients
-% %             % used for the ZC moment computation. The folder path is taken from
-% %             % obj.Settings.ChiCoeffPath and the files themself are assumed to
-% %             % be mat-files with name 'chiCoeffs_order_X.mat', where X is the
-% %             % ZC order.
-% %             
-% %             chiCoeffFilename = sprintf('chiCoeffs_order_%d.mat', obj.Settings.Order);
-% %             
-% %             chiCoeffDataPath = fullfile(obj.Settings.ChiCoeffPath, chiCoeffFilename);
-% %             
-% %             if ~exist('chi_coeff_cell','var')
-% %                 if obj.Logging.Level > 2
-% %                     fprintf('\n Loading Chi coefficients from file:\n\t %s', chiCoeffDataPath);
-% %                 end
-% %                 
-% %                 load(chiCoeffDataPath,'chi_coeff_cell', 'chi_nlm_rst_cell');
-% %             else
-% %                 
-% %                 fprintf('\n ');
-% % 
-% %                 
-% %             end
-% %             
-% %             obj.ChiCoeffs.Values = chi_coeff_cell;
-% %             obj.ChiCoeffs.Indices = chi_nlm_rst_cell;
-% %             obj.ChiCoeffs.Order = obj.Settings.Order;
-%             
-%         end
         
         function Score = computeScore(obj)
             % computeScore Compute the ZEAL score for the shape superposition.
