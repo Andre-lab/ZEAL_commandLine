@@ -302,6 +302,7 @@ shapeAlignData.save2pdb('folderPath', '/Users/yourUserName/Desktop')
 # Optional input
 
 
+
 The parameters listed below are set by default, but can be changed (described in \hyperref{H_56E64AE2}{Changing default parameters}). 
 
 ### Shape 
