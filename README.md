@@ -26,8 +26,6 @@ ZEAL depends on the following classes
 ZEAL uses functions from these toolboxes which have to be installed (included in [MATLAB Runtime](https://www.mathworks.com/products/compiler/matlab-runtime.html) if ZEAL run as standalone program)
 
 
-
-   -  `bioinformatics_toolbox`           *Bioinformatics toolbox* 
    -  `gads_toolbox`                                 G*lobal Optimization Toolbox* 
    -  `image_toolbox              `*Image Processing Toolbox* 
    -  `optimization_toolbox       `*Optimization Toolbox**`   `* 
