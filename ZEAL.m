@@ -883,7 +883,7 @@ classdef ZEAL < handle
                     ZCmoments = obj.rotating.ZC.Moments.Values;
             end
             
-        end
+        end      
         
     end
     
