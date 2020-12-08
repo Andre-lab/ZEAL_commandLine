@@ -18,9 +18,10 @@ ZEAL depends on the following classes
 
 
 
-   -  **PDB.m **             Handles reading/fetching/parsing of PDB files 
+   -  **PDB.m**             Handles reading/fetching/parsing of PDB files 
    -  **molShape.m**    Generates a molecular shape function (the molecular surface by default) from PDB object data 
    -  **ZC.m**                 Handles computation of Zernike-Canterakis moments and shape reconstruction 
+   -  **ChiCoeffs**     Handles loading of pre-computed (object-independent) Chi-coefficients from .mat-files
 
 ## Toolboxes
 
