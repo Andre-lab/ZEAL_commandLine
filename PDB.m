@@ -221,7 +221,7 @@ classdef PDB < handle
            
             % check if file
             if exist(cifSource,'file')               
-                textLines = splitlines( fileread('1stm.cif') );                
+                textLines = splitlines( fileread( cifSource ) );                
             else                                
                 textLines = splitlines(cifSource);                
             end
