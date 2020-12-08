@@ -1,7 +1,9 @@
 # ZEAL
 
 
-This manual describes how to use the command-line version of ZEAL in MATLAB, available for download from github link XXXX.  For details on the method itself, see the publication [publication](https://academic.oup.com/bioinformatics):
+This manual describes how to use the command-line version of ZEAL in MATLAB, 
+available for download from github link XXXX.  For details on the method itself, 
+see the publication [publication](https://academic.oup.com/bioinformatics):
 
 
 
@@ -45,13 +47,24 @@ ZEAL uses functions from these toolboxes which have to be installed (included in
 # Input
 
 
-ZEAL can be run in two modes depending on if one or two protein structures are given as input. Protein structrues can either be given as files (`'filename.pdb'` or ` `'`filepath/filename.pdb'` if not in same directory ) or as 4-letter PDB ID codes (eg. '5MOK'). If a 5-letter PDB ID code is given (eg. '5MOKA'), then the last letter is assumed to be the chain ID ('A') that should be selected for analysis. By default, the A chain of the structure (first model if several exist) is used, excluding hydrogen atoms and any heteroatoms. If any alternate atom locations are defined, the 'A' state is selected. See the section \hyperref{H_56E64AE2}{Changing default parameters} to change what structure data should be used in the analysis.  
+ZEAL can be run in two modes depending on if one or two protein structures 
+are given as input. Protein structrues can either be given as files 
+(`'filename.pdb'` or ` `'`filepath/filename.pdb'` if not in same directory) 
+or as 4-letter PDB ID codes (eg. '5MOK'). If a 5-letter PDB ID code is given 
+(eg. '5MOKA'), then the last letter is assumed to be the chain ID ('A') 
+that should be selected for analysis. By default, all chains of the 
+structure (first model if several exist) is used, excluding hydrogen atoms 
+and any heteroatoms. If any alternate atom locations are defined, all states  
+are selected. See the section \hyperref{H_56E64AE2}{Changing 
+default parameters} to change what structure data should be used in the analysis.  
 
 
   
 
 
-**Single mode** If one structure is given, then ZEAL will compute the Zernike-Canterkis shape descriptor for the structure (defined in the object as the `fixed` structure)
+**Single mode** If one structure is given, then ZEAL will compute the 
+Zernike-Canterkis shape descriptor for the structure 
+(defined in the object as the `fixed` structure)
 
 
 
@@ -84,7 +97,9 @@ Running ZEAL in single mode
   
 
 
-**Align mode** Adding a second structure with parameter `'rot'` will start the shape alignment search in ZEAL where the second structure (defined as `rotating` in the object) is rotated 
+**Align mode** Adding a second structure with parameter `'rot'` will start 
+the shape alignment search in ZEAL where the second structure 
+(defined as `rotating` in the object) is rotated 
 
 
 
@@ -228,7 +243,11 @@ ans = 0.0253
 
 ## Structures
 
-Aligned structrues can be saved to PDB files using the save2pdb method. By default, both the fixed and rotating structure are exported to the current directory (see below on how to change). The names of the new pdb files have the format `originalname_ZEAL.pdb `(this can't be changed)`. `Also, HETATM records are omitted but this can be changed (se below).
+Aligned structrues can be saved to PDB files using the save2pdb method. 
+By default, both the fixed and rotating structure are exported to the current 
+directory (see below on how to change). The names of the new pdb files have 
+the format `originalname_ZEAL.pdb `(this can't be changed)`. `Also, HETATM 
+records are omitted but this can be changed (se below).
 
 
 
@@ -266,9 +285,11 @@ shapeAlignData.save2pdb('includeAll', true)
 
 
 
-If the original pdb file contains multiple chains, and the alignment was done with respect to chain X of the fixed structure and chain Y of the rotating structure, the coordinates are transformed so that the centroid of the X chain and Y chain are placed at the origo, and coordinates of the rotating structure are rotated relative that center. 
-
-
+If the original pdb file contains multiple chains, and the alignment was done 
+with respect to chain X of the fixed structure and chain Y of the rotating 
+structure, the coordinates are transformed so that the centroid of the X 
+chain and Y chain are placed at the origo, and coordinates of the rotating 
+structure are rotated relative that center. 
 
 
 To ***include HETATM records***, use 
@@ -331,8 +352,8 @@ The parameters listed below are set by default, but can be changed (described in
 |'rot_includeHatoms' | 'logical' |0| 'true/false' | "---" in rotating structure.|
 |'fix_chainID'|'char' | 'all' | 'all' or 1 letter' | The chain ID that should be selected (''all'' = all chains) in fixed structure.|
 |'rot_chainID'|'char' | 'all' | 'all' or 1 letter' | "---" in rotating structure.|
-|'fix_altLocID' |  'integer' | 'A' | 'all' or 1 letter' | The ID of any atom altlocs that should be selected in fixed structure. Use ''all'' to include all altlocs. |
-|'rot_altLocID' |  'integer' | 'A' | 'all' or 1 letter' | "---" in rotating structure. |
+|'fix_altLocID' |  'integer' | 'all' | 'all' or 1 letter' | The ID of any atom altlocs that should be selected in fixed structure. Use ''all'' to include all altlocs. |
+|'rot_altLocID' |  'integer' | 'all' | 'all' or 1 letter' | "---" in rotating structure. |
   
 
 
