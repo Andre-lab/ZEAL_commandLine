@@ -418,7 +418,7 @@ classdef PDB < handle
             end
             
             if altLocOp
-                keepAltLocTF = contains(pdbStruct.altLoc, {altLocID,''});
+                keepAltLocTF = startsWith(pdbStruct.altLoc, {altLocID,' '});
                 keepListTF = (keepListTF + keepAltLocTF) == 2;
             end
             
