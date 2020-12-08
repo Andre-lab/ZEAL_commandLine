@@ -192,8 +192,8 @@ classdef ZC < handle
             % Proceedings of the Eighth ACM Symposium on Solid Modeling and Applications,
             % 216–225. https://doi.org/10.1145/781636.781639
             %
-            %
-            % NB: There is a known bug in this code which
+            % The bug in the original C++ library that caused the shape
+            % descriptors to be cumulative has been fixed here.
             %
             % -------------------------------------------------------------
             
