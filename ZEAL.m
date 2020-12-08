@@ -319,8 +319,9 @@ classdef ZEAL < handle
                 fprintf('\n - Computing ZC moments for fixed structure');
             end
             
-            % Reload Chi Coeffs. if expansion order differs from default
-            if ~isequal(obj.Settings.Order, default_Order)
+            % Reload Chi Coeffs. if expansion order differs from order in
+            % singelton property (ChiCoeffs)
+            if ~isequal(obj.Settings.Order, obj.ChiCoeffs.Order)
                 obj.reloadChiCoeffs('Order',obj.Settings.Order);
             end
             
@@ -329,7 +330,7 @@ classdef ZEAL < handle
             
             if obj.AlignMode
                 if obj.Logging.Level > 0
-                    fprintf('\n - Computing ZC moments for rotating structure\n');
+                    fprintf('\n - Computing ZC moments for rotating structure');
                 end
                 
                 obj.rotating.ZC = ZC(obj.rotating.molShape.FunctionData, obj.Settings.Order, obj.ChiCoeffs, 'ShowLog', obj.Settings.molShape.ShowLog);
@@ -347,6 +348,8 @@ classdef ZEAL < handle
                     shapeAlign(obj);
                 end
             end
+            
+            fprintf('\n');
             
         end
         
