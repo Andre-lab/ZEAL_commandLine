@@ -27,14 +27,10 @@ classdef PDB < handle
     % -------------------------------------------------------------
     
     properties
-        Name % filename or 4-letter PDB id code or 4+1-letter code (PDB id code)+(chain id)
-        Source % source meta data for file/downloaded
+        Name % Filename or 4-letter PDB id code or 4+1-letter code (PDB id code)+(chain id)
+        Source % Source meta data for file/downloaded
         
-        Selection % Filter the PDB data with the following selection fields : type : (defaults)
-        % selection.ChainID     :  string      :  ('A')
-        % Selection.Hetatoms    :  true/false  :  (false = hetatom records omitted)
-        % Selection.Hatoms      :  true/false  :  (false = hydrogen atoms omitted)
-        % Selection.AltLoc      :  string      :  ('A' locations kept)
+        Selection % Struct with fields dictating filtering options for PDB data
         
         Data      % structured array containing ATOM and/or HETATOM records
         
@@ -73,7 +69,7 @@ classdef PDB < handle
             % <selection.chainID>          :       string       ('all')
             %   The id of the chain to keep. If not defined then all included.
             %
-            % <selection.altLocID>         :       string       ('A') {Use 'all' to include all altlocs}
+            % <selection.altLocID>         :       string       ('all') {Use 'all' to include all altlocs}
             %   The id of any alternate locations to keep. If not defined then all
             %   included
             %
@@ -85,7 +81,7 @@ classdef PDB < handle
             default_includeHetatoms = false;
             default_includeHatoms = false;
             default_chainID = 'all';
-            default_altLocID = 'A';
+            default_altLocID = 'all';
             default_ShowLog = false;
             
             p = inputParser;
