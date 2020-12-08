@@ -403,9 +403,9 @@ classdef PDB < handle
                 keepListTF = strcmp(pdbStruct.recordName, 'ATOM');
             end
             
-            if includeHatoms
+            if isequal(includeHatoms, false)
                 keepHatomsTF = (strcmp(pdbStruct.element, 'H')) == 0;
-                keepListTF = (keepListTF + keepHatomsTF) == 2;
+                keepListTF = (keepListTF + keepHatomsTF) == 2;           
             end
             
             if chainOp
