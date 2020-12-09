@@ -129,6 +129,8 @@ classdef PDB < handle
                         obj.AllData = PDB.readPDBfile(fullfile(obj.Source.Path, [obj.Source.Name obj.Source.Ext] ));
                     case '.cif'
                         obj.AllData = PDB.readCIFdata(fullfile(obj.Source.Path, [obj.Source.Name obj.Source.Ext] ));
+                    otherwise
+                        error('Files have to have extension .pdb or .cif in order for me to parse it (yes it''s a stupid parser')
                 end
                                
                 if obj.ShowLog
@@ -156,9 +158,9 @@ classdef PDB < handle
 
                     queryStr = sprintf('https://models.rcsb.org/v1/%s/atoms?encoding=cif&copy_all_categories=false', pdbid);
                     
-                    if obj.ShowLog
+%                     if obj.ShowLog
                        fprintf('\n Downloading PDB (CIF-format) with query \n%s ', queryStr); 
-                    end
+%                     end
                     
                     cifDataPulled = webread(queryStr);
                                         
