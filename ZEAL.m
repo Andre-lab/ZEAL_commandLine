@@ -35,17 +35,18 @@ classdef ZEAL < handle
         
         Logging
         AlignLater % true/false (false by default)
+        InputParserOnly % true/false -> 
         % if true then ZEAL will not start aligning automatically
     end
     
     properties (Constant)
-        ChiCoeffs = ChiCoeffs % A singleton  (=only one instance) object (ChiCoeffs class) 
-                              % that handles the loading of pre-computed
-                              % chi-coefficients from .mat-files
-                              % The coefficients are visible (like a "global" variable) for all
-                              % instances of ZEAL, but they are only loaded
-                              % to memory once. See also the 
-                              % reloadChiCoeffs method in this class.
+        ChiCoeffs = ChiCoeffs % A singleton  (=only one instance) object (ChiCoeffs class)
+        % that handles the loading of pre-computed
+        % chi-coefficients from .mat-files
+        % The coefficients are visible (like a "global" variable) for all
+        % instances of ZEAL, but they are only loaded
+        % to memory once. See also the
+        % reloadChiCoeffs method in this class.
     end
     
     methods
@@ -69,14 +70,17 @@ classdef ZEAL < handle
             %
             % 'Order'           : integer (20)
             % 'GridRes'         : integer (64)
-            % 'FunEvals'        : integer (300) 
+            % 'FunEvals'        : integer (300)
             %       Number of ZEAL score evaluations during search =
-            %       the stopping criterium for search 
+            %       the stopping criterium for search
             %
             % 'AlignLater'      : true/false (false)
             % If true then ZEAL will not start searching for best alignment
             % automatically. Manuall start the search using the method
             % shapeAlign(ZEALobject).
+            %
+            % 'InputParserOnly'       : true/false (false)
+            % If true then only the option parsing is performed
             %
             % 'LogOption'       : 'basic' / 'standard' / 'detailed' / 'none' ('standard')
             % Sets the level of information printed to the console.
@@ -86,8 +90,8 @@ classdef ZEAL < handle
             % 'ShapeFunction'   : string ('MS') {choose between 'SAS','MS','vdw','electron_density'}
             % MS = molecular surface; SAS = solvent-accessible surface; vdw
             % = van der Waals; electron_density = Gaussian atom
-            % representation 
-            % 
+            % representation
+            %
             % 'ProbeRadius'     : integer (1.4)
             % 'SmearFactor'     : double (0.3) - for electron_density shape
             % 'ShellThickness'  : integer (1)
@@ -177,6 +181,7 @@ classdef ZEAL < handle
             default_LogOption = 'standard';
             
             default_AlignLater = false;
+            default_inputParserOnly = false;
             
             default_rot = ''; % = no rotating structure ->  zeal computes shape descriptors for fixed only
             
@@ -209,20 +214,15 @@ classdef ZEAL < handle
             addOptional(p, 'ChiCoeffPath', default_ChiCoeffPath);
             
             addOptional(p, 'AlignLater', default_AlignLater);
+            addOptional(p, 'InputParserOnly', default_inputParserOnly);
+            
             addOptional(p, 'LogLevel', default_LogOption, @(x) any(validatestring(x,expected_ShowLog)));
             
             % Parse and set defaults
             parse(p, fix, varargin{:});
             
-            if isempty(p.Results.rot)
-                obj.AlignMode = false;
-                fprintf('\n\n Running ZEAL in single mode');
-            else % rot structure given -> align mode activated
-                obj.AlignMode = true;
-                fprintf('\n\n Running ZEAL in Align mode');
-            end
             
-                       
+            
             % --- Assign parameters ---
             
             obj.Settings.Order = p.Results.Order;
@@ -237,6 +237,7 @@ classdef ZEAL < handle
             obj.Settings.molShape.ShellThickness = p.Results.ShellThickness;
             
             obj.AlignLater = p.Results.AlignLater;
+            obj.InputParserOnly = p.Results.InputParserOnly;
             
             obj.Search.Performed = false;
             obj.Search.EulerAngles = [0 0 0];
@@ -276,83 +277,95 @@ classdef ZEAL < handle
             obj.fixed.Selection.chainID = p.Results.fix_chainID;
             obj.fixed.Selection.altLocID = p.Results.fix_altLocID;
             
-            % --- Import structures ---
-            if obj.Logging.Level > 0
-                fprintf('\n - Importing fixed structure: %s', obj.fixed.Name);
-            end
-            obj.fixed.PDB = PDB(obj.fixed.Name, obj.fixed.Selection);
-           
-            if  obj.AlignMode
-                % Set PDB parameters for rotating if align mode activated
-                obj.rotating.Name = p.Results.rot;
-                obj.rotating.Selection.includeHetatoms = p.Results.rot_includeHetatoms;
-                obj.rotating.Selection.includeHatoms = p.Results.rot_includeHatoms;
-                obj.rotating.Selection.chainID = p.Results.rot_chainID;
-                obj.rotating.Selection.altLocID = p.Results.rot_altLocID;
+            if ~obj.InputParserOnly
+                
+                if isempty(p.Results.rot)
+                    obj.AlignMode = false;
+                    fprintf('\n\n Running ZEAL in single mode');
+                else % rot structure given -> align mode activated
+                    obj.AlignMode = true;
+                    fprintf('\n\n Running ZEAL in Align mode');
+                end
+                
+                
+                % --- Import structures ---
+                if obj.Logging.Level > 0
+                    fprintf('\n - Importing fixed structure: %s', obj.fixed.Name);
+                end
+                obj.fixed.PDB = PDB(obj.fixed.Name, obj.fixed.Selection);
+                
+                if  obj.AlignMode
+                    % Set PDB parameters for rotating if align mode activated
+                    obj.rotating.Name = p.Results.rot;
+                    obj.rotating.Selection.includeHetatoms = p.Results.rot_includeHetatoms;
+                    obj.rotating.Selection.includeHatoms = p.Results.rot_includeHatoms;
+                    obj.rotating.Selection.chainID = p.Results.rot_chainID;
+                    obj.rotating.Selection.altLocID = p.Results.rot_altLocID;
+                    
+                    if obj.Logging.Level > 0
+                        fprintf('\n - Importing rotating structure: %s', obj.rotating.Name);
+                    end
+                    
+                    obj.rotating.PDB = PDB(obj.rotating.Name, obj.rotating.Selection);
+                    
+                end
+                
+                % --- Compute shape functions ---
+                if obj.Logging.Level > 0
+                    fprintf('\n - Computing shape function for fixed structure');
+                end
+                
+                obj.fixed.molShape = molShape(obj.fixed.PDB.Data, obj.Settings.molShape);
+                
+                if obj.AlignMode
+                    if obj.Logging.Level > 0
+                        fprintf('\n - Computing shape function for rotating structure');
+                    end
+                    obj.rotating.molShape = molShape(obj.rotating.PDB.Data, obj.Settings.molShape);
+                end
+                
+                
+                % --- Computing ZC moments ---
                 
                 if obj.Logging.Level > 0
-                    fprintf('\n - Importing rotating structure: %s', obj.rotating.Name);
+                    fprintf('\n - Computing ZC moments for fixed structure');
                 end
                 
-                obj.rotating.PDB = PDB(obj.rotating.Name, obj.rotating.Selection);
-                                
-            end
-            
-            % --- Compute shape functions ---
-            if obj.Logging.Level > 0
-                fprintf('\n - Computing shape function for fixed structure');
-            end
-            
-            obj.fixed.molShape = molShape(obj.fixed.PDB.Data, obj.Settings.molShape);
-            
-            if obj.AlignMode
-                if obj.Logging.Level > 0
-                    fprintf('\n - Computing shape function for rotating structure');
-                end
-                obj.rotating.molShape = molShape(obj.rotating.PDB.Data, obj.Settings.molShape);
-            end
-            
-            
-            % --- Computing ZC moments ---
-            
-            if obj.Logging.Level > 0
-                fprintf('\n - Computing ZC moments for fixed structure');
-            end
-            
-            % Reload Chi Coeffs. if expansion order differs from order in
-            % singelton property (ChiCoeffs)
-            if ~isequal(obj.Settings.Order, obj.ChiCoeffs.Order)
-                obj.reloadChiCoeffs('Order',obj.Settings.Order);
-            end
-            
-            obj.fixed.ZC = ZC(obj.fixed.molShape.FunctionData, obj.Settings.Order, obj.ChiCoeffs, 'ShowLog', obj.Settings.molShape.ShowLog);
-            computeDescriptors(obj.fixed.ZC);
-            
-            if obj.AlignMode
-                if obj.Logging.Level > 0
-                    fprintf('\n - Computing ZC moments for rotating structure');
+                % Reload Chi Coeffs. if expansion order differs from order in
+                % singelton property (ChiCoeffs)
+                if ~isequal(obj.Settings.Order, obj.ChiCoeffs.Order)
+                    obj.reloadChiCoeffs('Order',obj.Settings.Order);
                 end
                 
-                obj.rotating.ZC = ZC(obj.rotating.molShape.FunctionData, obj.Settings.Order, obj.ChiCoeffs, 'ShowLog', obj.Settings.molShape.ShowLog);
+                obj.fixed.ZC = ZC(obj.fixed.molShape.FunctionData, obj.Settings.Order, obj.ChiCoeffs, 'ShowLog', obj.Settings.molShape.ShowLog);
+                computeDescriptors(obj.fixed.ZC);
                 
-                computeDescriptors(obj.rotating.ZC);
-                
-                % Compute the Euclidean distance between shape descriptors
-                computeZCDdistance(obj);
-                
-                % Compute the initial ZEAL score
-                obj.Search.InitialScore = computeScore(obj);
-                
-                if ~obj.AlignLater
-                    % Perform shape alignment
-                    shapeAlign(obj);
+                if obj.AlignMode
+                    if obj.Logging.Level > 0
+                        fprintf('\n - Computing ZC moments for rotating structure');
+                    end
+                    
+                    obj.rotating.ZC = ZC(obj.rotating.molShape.FunctionData, obj.Settings.Order, obj.ChiCoeffs, 'ShowLog', obj.Settings.molShape.ShowLog);
+                    
+                    computeDescriptors(obj.rotating.ZC);
+                    
+                    % Compute the Euclidean distance between shape descriptors
+                    computeZCDdistance(obj);
+                    
+                    % Compute the initial ZEAL score
+                    obj.Search.InitialScore = computeScore(obj);
+                    
+                    if ~obj.AlignLater
+                        % Perform shape alignment
+                        shapeAlign(obj);
+                    end
                 end
+                
+                fprintf('\n');
+                
             end
-            
-            fprintf('\n');
             
         end
-        
         
         function shapeAlign(obj)
             %shapeAlign Start searching for best shape alingment using
@@ -572,12 +585,17 @@ classdef ZEAL < handle
             defaultHetatoms = false;
             defaultAll = false;
             
+            defaultFixName = [obj.fixed.PDB.name '_ZEAL.pdb'];
+            
             % do option parsing
             p = inputParser;
             
             addOptional(p, 'structure', defaultStructure, @(x) any(validatestring(x,expectedStructures)));
             addOptional(p, 'includeHetatoms', defaultHetatoms);
             addOptional(p, 'includeAll', defaultAll);
+            
+            addOptional(p, 'fixName', defaultFixName);
+            addOptional(p, 'rotName', defaultRotName);
             
             addOptional(p, 'folderPath', defaultPath);
             
@@ -618,8 +636,7 @@ classdef ZEAL < handle
                     pdbData.Y = xyzRot(:,2);
                     pdbData.Z = xyzRot(:,3);
                     
-                    [~, name, ~] = fileparts(obj.fixed.Name);
-                    filePath=fullfile(folderpath, [name '_ZEAL.pdb']);
+                    filePath=fullfile(folderpath, fixName);
                     
                     exportPdb(obj, 'fixed', pdbData, filePath)
                     
@@ -652,8 +669,7 @@ classdef ZEAL < handle
                     pdbData.Y = xyzRot(:,2);
                     pdbData.Z = xyzRot(:,3);
                     
-                    [~, name, ~] = fileparts(obj.rotating.Name);
-                    filePath=fullfile(folderpath, [name '_ZEAL.pdb']);
+                    filePath=fullfile(folderpath, rotName);
                     
                     exportPdb(obj, 'rotating', pdbData, filePath)
                     
@@ -662,7 +678,7 @@ classdef ZEAL < handle
                 saveSuccessFul = true;
                 
             catch ME
-                              
+                
                 rethrow(ME)
                 
             end
@@ -730,7 +746,7 @@ classdef ZEAL < handle
                 error('Author:Function:OpenFile', 'Cannot open file: %s', name);
             end
             
-            % Write 
+            % Write
             if ~isempty(obj.fixed) && ~isempty(obj.rotating)
                 
                 % write settings used for the shape alignment to REMARK record
@@ -814,7 +830,7 @@ classdef ZEAL < handle
                 pdbData.element = cell(nRecords,1);
             end
             
-            % charge 
+            % charge
             if nRecords == sum(cellfun(checkIfEmpty, pdbData.charge))
                 pdbData.charge = cell(nRecords,1);
             end
@@ -834,22 +850,22 @@ classdef ZEAL < handle
             % method to merge two ZEAL objects in "single mode" to a new
             % object in "align mode", i.e. a fixed and rotating structure
             % that can be aligned. The shape similarity (Euclidean ZCD
-            % distance) is computed upon creation. 
-            % 
+            % distance) is computed upon creation.
+            %
             % Example
             % a = ZEAL('1stmA');
             % b = ZEAL('2lisA')
             % ab = mergeZEAL(a,b)
             %
-            % Perform alignment 
+            % Perform alignment
             % shapeAlign(ab)
             
             obj = fixObj;
             obj.fixed = fixObj.fixed;
             obj.rotating = rotObj.fixed;
             
-            computeZCDdistance(obj);           
-
+            computeZCDdistance(obj);
+            
         end
         
         function ZCD = getShapeDescriptors(obj, varargin)
@@ -859,15 +875,15 @@ classdef ZEAL < handle
             else
                 structure = varargin{1};
             end
-           
-           switch structure
-               
-               case 'fixed'
-                   ZCD = obj.fixed.ZC.Descriptors;
-               case 'rotating'
-                   ZCD = obj.rotating.ZC.Descriptors;
-           end
-           
+            
+            switch structure
+                
+                case 'fixed'
+                    ZCD = obj.fixed.ZC.Descriptors;
+                case 'rotating'
+                    ZCD = obj.rotating.ZC.Descriptors;
+            end
+            
         end
         
         function ZCmoments = getMoments(obj, varargin)
@@ -886,7 +902,7 @@ classdef ZEAL < handle
                     ZCmoments = obj.rotating.ZC.Moments.Values;
             end
             
-        end      
+        end
         
     end
     
@@ -907,7 +923,7 @@ classdef ZEAL < handle
         end
         
         function writeModel(fid, model)
-            % Write PDB structure data to file (id = fid). Structure format is that from PDB class. 
+            % Write PDB structure data to file (id = fid). Structure format is that from PDB class.
             % Helper function to export2Pdb method in case we want to write
             % multiple models to same file
             
@@ -934,8 +950,8 @@ classdef ZEAL < handle
             end
             
         end
-                
+        
     end
-   
+    
 end
 
