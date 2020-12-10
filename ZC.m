@@ -221,7 +221,7 @@ classdef ZC < handle
                     
                     sum_tmp = 0;
                     
-                    for m = -l:l
+                    for m=-l:l
 
                         absM = abs(m);
                         
