@@ -157,21 +157,21 @@ classdef PDB < handle
                     pdbid = lower(name(1:4));
 
                     queryStr = sprintf('https://models.rcsb.org/v1/%s/atoms?encoding=cif&copy_all_categories=false', pdbid);
-                    
-                    if numel(pdbid)>=4 || numel(pdbid)>=5
+                                        
+                    if numel(pdbid)>=4 && numel(pdbid)<=5
                         
                         if isempty(ext)
                             if obj.ShowLog
                                 fprintf('\n Downloading PDB (CIF-format) with ID=%s.\n\t PDB query: %s\n', pdbid, queryStr);
                             end
                         else
-                            
+                            fprintf('\n');
                             warning('Trying to downloading PDB (CIF-format) with ID=%s. This may not be what you want.\n\t PDB query: %s\n', pdbid, queryStr);
                         end
                         
                     else
                         
-                        error('\n Could not find file %s%s at%s\n', name, ext, filepath);
+                        error('\n Could not find file %s%s at path%s\n', name, ext, filepath);
                         
                     end
                     
