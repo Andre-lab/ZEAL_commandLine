@@ -1,6 +1,6 @@
 # ZEAL
 
-![ZEAL graphical abstract](https://github.com/Andre-lab/ZEAL_commandLine/blob/main/graphicalAbstract.png)
+![ZEAL graphical abstract](https://github.com/Andre-lab/ZEAL_commandLine/blob/main/graphicalAbstract_web.png)
 
 This manual describes how to use the command-line version of ZEAL in MATLAB, 
 available for download from github link XXXX.  For details on the method itself, 
