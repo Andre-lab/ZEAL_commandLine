@@ -68,7 +68,7 @@ classdef ZEALtest < matlab.unittest.TestCase
         
         function testPDB_default(testCase)
            % read PDB file containing 
-            PDBstruct = PDB('5mok.pdb'); 
+            PDBstruct = PDB('sample_data/5mok.pdb'); 
             
            % assert default selection criteria expected for ZEAL
            testCase.assertFalse(PDBstruct.Selection.includeHatoms, 'HETATM should not be selected by default');
@@ -87,7 +87,7 @@ classdef ZEALtest < matlab.unittest.TestCase
         
         function testPDB_chain(testCase)
             
-             PDBstruct = PDB('5mok.pdb', 'chainID', 'B');
+             PDBstruct = PDB('sample_data/5mok.pdb', 'chainID', 'B');
              
              nAtoms = length(PDBstruct.Data.X);
              testCase.assertEqual(nAtoms, 1594, 'Number of ATOM records differ from expected');                         
@@ -96,7 +96,7 @@ classdef ZEALtest < matlab.unittest.TestCase
         
         function testPDB_hetatoms(testCase)
             
-             PDBstruct = PDB('5mok.pdb', 'includeHetatoms', true);
+             PDBstruct = PDB('sample_data/5mok.pdb', 'includeHetatoms', true);
              
              nAtoms = length(PDBstruct.Data.X);
              testCase.assertEqual(nAtoms, 6358+815, 'Number of ATOM+HETATM records differ from expected');                         
@@ -111,7 +111,7 @@ classdef ZEALtest < matlab.unittest.TestCase
         
         function testCIF_default(testCase)
            % read PDB file containing 
-            PDBstruct = PDB('5mok.cif'); 
+            PDBstruct = PDB('sample_data/5mok.cif'); 
             
            % assert default selection criteria expected for ZEAL
            testCase.assertFalse(PDBstruct.Selection.includeHatoms, 'HETATM should not be selected by default');
@@ -130,7 +130,7 @@ classdef ZEALtest < matlab.unittest.TestCase
         
         function testCIF_chain(testCase)
             
-             PDBstruct = PDB('5mok.cif', 'chainID', 'B');
+             PDBstruct = PDB('sample_data/5mok.cif', 'chainID', 'B');
              
              nAtoms = length(PDBstruct.Data.X);
              testCase.assertEqual(nAtoms, 1594, 'Number of ATOM records differ from expected');                         
@@ -139,7 +139,7 @@ classdef ZEALtest < matlab.unittest.TestCase
         
         function testCIF_hetatoms(testCase)
             
-             PDBstruct = PDB('5mok.cif', 'includeHetatoms', true);
+             PDBstruct = PDB('sample_data/5mok.cif', 'includeHetatoms', true);
              
              nAtoms = length(PDBstruct.Data.X);
              testCase.assertEqual(nAtoms, 6358+815, 'Number of ATOM+HETATM records differ from expected');                         
@@ -172,7 +172,7 @@ classdef ZEALtest < matlab.unittest.TestCase
         
         function testDownload_chain(testCase)
             
-             PDBstruct = PDB('5mok', 'chainID', 'B');
+             PDBstruct = PDB('sample_data/5mok', 'chainID', 'B');
              
              nAtoms = length(PDBstruct.Data.X);
              testCase.assertEqual(nAtoms, 1594, 'Number of ATOM records differ from expected');
@@ -181,7 +181,7 @@ classdef ZEALtest < matlab.unittest.TestCase
         
         function testDownload_chain_auto(testCase)
             
-            PDBstruct = PDB('5mokB');
+            PDBstruct = PDB('sample_data/5mokB');
             
             nAtoms = length(PDBstruct.Data.X);
             testCase.assertEqual(nAtoms, 1594, 'Number of ATOM records differ from expected');
@@ -190,7 +190,7 @@ classdef ZEALtest < matlab.unittest.TestCase
         
         function testDownload_auto_Hatoms(testCase)
             
-            PDBstruct = PDB('5PTI.pdb', 'includeHatoms', true);
+            PDBstruct = PDB('sample_data/5PTI.pdb', 'includeHatoms', true);
             
             nAtoms = length(PDBstruct.Data.X);
             testCase.assertEqual(nAtoms, 909, 'Number of ATOM records differ from expected');
@@ -199,7 +199,7 @@ classdef ZEALtest < matlab.unittest.TestCase
         
         function testDownload_hetatoms(testCase)
             
-            PDBstruct = PDB('5mok', 'includeHetatoms', true);
+            PDBstruct = PDB('sample_data/5mok', 'includeHetatoms', true);
             
             nAtoms = length(PDBstruct.Data.X);
             testCase.assertEqual(nAtoms, 6358+815, 'Number of ATOM+HETATM records differ from expected');
