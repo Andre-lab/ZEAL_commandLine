@@ -124,13 +124,13 @@ classdef PDB < handle
                 
                 % Check if file is PDB or CIF
                 
-                switch obj.Source.Ext
+                switch lower(obj.Source.Ext)
                     case '.pdb'
                         obj.AllData = PDB.readPDBfile(fullfile(obj.Source.Path, [obj.Source.Name obj.Source.Ext] ));
                     case '.cif'
                         obj.AllData = PDB.readCIFdata(fullfile(obj.Source.Path, [obj.Source.Name obj.Source.Ext] ));
                     otherwise
-                        error('Files have to have extension .pdb or .cif in order for me to parse it (yes it''s a stupid parser')
+                        error('Files have to have extension .pdb or .cif in order for me to parse it (yes it''s that stupid).')
                 end
                                
                 if obj.ShowLog
@@ -153,14 +153,27 @@ classdef PDB < handle
 
             else % download
                 try
-                    [~,name,~] = fileparts(obj.Name);
+                    [filepath, name, ext] = fileparts(obj.Name);
                     pdbid = lower(name(1:4));
 
                     queryStr = sprintf('https://models.rcsb.org/v1/%s/atoms?encoding=cif&copy_all_categories=false', pdbid);
                     
-%                     if obj.ShowLog
-                       fprintf('\n Downloading PDB (CIF-format) with query \n%s ', queryStr); 
-%                     end
+                    if numel(pdbid)>=4 || numel(pdbid)>=5
+                        
+                        if isempty(ext)
+                            if obj.ShowLog
+                                fprintf('\n Downloading PDB (CIF-format) with ID=%s.\n\t PDB query: %s\n', pdbid, queryStr);
+                            end
+                        else
+                            
+                            warning('Trying to downloading PDB (CIF-format) with ID=%s. This may not be what you want.\n\t PDB query: %s\n', pdbid, queryStr);
+                        end
+                        
+                    else
+                        
+                        error('\n Could not find file %s%s at%s\n', name, ext, filepath);
+                        
+                    end
                     
                     cifDataPulled = webread(queryStr);
                                         
