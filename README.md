@@ -1,4 +1,3 @@
-# ZEAL
 
 ![ZEAL graphical abstract](https://github.com/Andre-lab/ZEAL_commandLine/blob/main/graphicalAbstract_web.png)
 
