@@ -166,7 +166,7 @@ classdef PDB < handle
                             end
                         else
                             fprintf('\n');
-                            warning('Trying to downloading PDB (CIF-format) with ID=%s. This may not be what you want.\n\t PDB query: %s\n', pdbid, queryStr);
+                            warning('Trying to download PDB (CIF-format) with ID=%s. This may not be what you want.\n\t PDB query: %s\n', pdbid, queryStr);
                         end
                         
                     else
@@ -214,9 +214,7 @@ classdef PDB < handle
             end
             
             obj.Data = PDB.parsePDBstruct(obj.AllData, obj.Selection);
-            
-            
-            
+                       
         end
         
         function reparsePDB(obj)
@@ -305,7 +303,8 @@ classdef PDB < handle
             PDBdata.altLoc = pdbDataCif.('label_alt_id');
             PDBdata.resName = pdbDataCif.('label_comp_id');
            
-            PDBdata.chainID = pdbDataCif.('label_asym_id');
+            %PDBdata.chainID = pdbDataCif.('label_asym_id');
+            PDBdata.chainID = pdbDataCif.('auth_asym_id');
             PDBdata.resNum = cellfun(@str2double, pdbDataCif.('label_seq_id'));
             PDBdata.X = cellfun(@str2double, pdbDataCif.('Cartn_x'));
             PDBdata.Y = cellfun(@str2double, pdbDataCif.('Cartn_y'));
@@ -429,7 +428,7 @@ classdef PDB < handle
             end
             
             if altLocOp
-                keepAltLocTF = startsWith(pdbStruct.altLoc, {altLocID,' '});
+                keepAltLocTF = startsWith(pdbStruct.altLoc, {altLocID,' ','.'});
                 keepListTF = (keepListTF + keepAltLocTF) == 2;
             end
             
