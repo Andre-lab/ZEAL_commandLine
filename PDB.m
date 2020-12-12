@@ -189,6 +189,7 @@ classdef PDB < handle
                     end
                         
                     if obj.ShowLog
+                        
                         fprintf('\n Filtering CIF-data:');
                         
                         fields = fieldnames(obj.Selection);
