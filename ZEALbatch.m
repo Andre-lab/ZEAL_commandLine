@@ -123,12 +123,13 @@ classdef ZEALbatch
                         
                         fix_descriptors(i,:) = shape_i.fixed.ZC.Descriptors;
                         rot_descriptors(i,:) = shape_i.fixed.ZC.Descriptors;
-                        score
+                        score(i) = shape_i.Score;
                     end
                     
                     % Gather (adapted for parfor)
                     obj.Results.Fixed.Descriptors = fix_descriptors;
                     obj.Results.Rotating.Descriptors = rot_descriptors;
+                    obj.Results.Score = score;
                     
                 else % SINGLE MODE
                     
