@@ -87,10 +87,24 @@ classdef ZEALbatch
             obj.Batch.N = length(obj.Batch.Fixed);
             obj.AlignMode = ZEALbatch.checkAlignMode(obj.Batch);
             
+            % inputs
+            
+            % defaults
+            default_parallel = false;
+            
+            p = inputParser;
+            p.KeepUnmatched = true;
+            
+            addOptional(p, 'parallel', default_parallel);
+            
+            parse(p, varargin{:});
+            
+            parOp = p.Results.parallel;
+            
             
             % Get options for ZEAL, both default and any supplied in this constructor
             
-            ZEAL_options = ZEAL('dummy', 'InputParserOnly', true, varargin{:});
+            ZEAL_options = ZEAL('dummy', 'InputParserOnly', true, p.Unmatched);
             
             % Preallocate arrays for holding results
             nInvariants = ZC.numberOfInvariants(ZEAL_options.Settings.Order);
@@ -100,9 +114,9 @@ classdef ZEALbatch
             score = zeros(obj.Batch.N, 1);
             
             if isempty(varargin)
-                zealOptions = {'Order', 20};
+                zealOptions.Order = 20;
             else                
-                zealOptions = varargin;
+                zealOptions = p.Unmatched;
             end
             
             try
@@ -116,7 +130,7 @@ classdef ZEALbatch
                     for i = 1:obj.Batch.N
                         
                         if ~isempty(fix{i}) && ~isempty(rot{i})
-                            shape_i = ZEAL(fix{i}, 'rot', rot{i}, zealOptions{:});
+                            shape_i = ZEAL(fix{i}, 'rot', rot{i}, zealOptions);
                         else
                             warning('No structure pair specified (input number %d)', i);
                         end
@@ -139,7 +153,7 @@ classdef ZEALbatch
                     for i = 1:obj.Batch.N
                         
                         if ~isempty(fix{i})
-                            shape_i = ZEAL(fix{i}, zealOptions{:});
+                            shape_i = ZEAL(fix{i}, zealOptions);
                             fix_descriptors(i,:) = shape_i.fixed.ZC.Descriptors;
                         else
                             warning('No structure specified (input number %d)', i);
