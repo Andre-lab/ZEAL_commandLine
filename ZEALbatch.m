@@ -50,12 +50,12 @@ classdef ZEALbatch
     
     properties
         Batch
-        AlignMode
         Results
     end
     
     properties (Hidden)
         pool
+        AlignMode
     end
     
     methods
