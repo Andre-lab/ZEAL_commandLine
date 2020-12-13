@@ -75,7 +75,7 @@ classdef ZEALbatch
                 
             else
                 
-                error('Batch list has to be specified as a matlab cell array or as a csv-file.');
+                error('Batch list has to be specified as a matlab cell array or as a txt or csv file.');
                 
             end
             
@@ -87,17 +87,20 @@ classdef ZEALbatch
             % defaults
             default_parallel = false;
             defualt_numCores = 4;
+            default_displayWarnings = true;
+            
             p = inputParser;
             p.KeepUnmatched = true;
             
             addOptional(p, 'parallel', default_parallel);
             addOptional(p, 'numCores', defualt_numCores);
+            addOptional(p, 'displayWarnings', default_displayWarnings);
             
             parse(p, varargin{:});
             
             parOp = p.Results.parallel;
             numCores = p.Results.numCores;
-            
+            displayWarnings = p.Results.displayWarnings;
             % set up parpool
             if parOp
                 
@@ -141,25 +144,31 @@ classdef ZEALbatch
                     
                     if parOp
                         
-%                         D = parallel.pool.DataQueue;
-%                         afterEach(D, @updateParStatus);
-%                         parCount = 1;
-                   
+                        %                         D = parallel.pool.DataQueue;
+                        %                         afterEach(D, @updateParStatus);
+                        %                         parCount = 1;
+                        
+                        
                         parfor i = 1:obj.Batch.N
                             
-                             fprintf('Doing id %d (%d):\n\t %s\n\t %s', i, N, fix{i}, rot{i})
-                            
-                            if ~isempty(fix{i}) && ~isempty(rot{i})
-                                shape_i = ZEAL(fix{i}, 'rot', rot{i}, zealOptions);
-                            else
-                                warning('No structure pair specified (input number %d)', i);
+                            try
+                                fprintf('Doing id %d (%d):\n\t %s\n\t %s', i, N, fix{i}, rot{i})
+                                
+                                
+                                if ~isempty(fix{i}) && ~isempty(rot{i})
+                                    shape_i = ZEAL(fix{i}, 'rot', rot{i}, zealOptions);
+                                else
+                                    warning('No structure pair specified (input number %d)', i);
+                                end
+                                
+                                fix_descriptors(i,:) = shape_i.fixed.ZC.Descriptors;
+                                rot_descriptors(i,:) = shape_i.fixed.ZC.Descriptors;
+                                score(i) = shape_i.Score;
+                                
+                                %                             D.send(i);
+                            catch ME
+                                warning(ME.message)
                             end
-                            
-                            fix_descriptors(i,:) = shape_i.fixed.ZC.Descriptors;
-                            rot_descriptors(i,:) = shape_i.fixed.ZC.Descriptors;
-                            score(i) = shape_i.Score;
-                            
-%                             D.send(i);
                             
                         end
                         
@@ -167,17 +176,22 @@ classdef ZEALbatch
                         
                         for i = 1:N
                             
-                            fprintf('Doing id %d (%d):\n\t %s\n\t %s', i, N, fix{i}, rot{i})
-                            
-                            if ~isempty(fix{i}) && ~isempty(rot{i})
-                                shape_i = ZEAL(fix{i}, 'rot', rot{i}, zealOptions);
-                            else
-                                warning('No structure pair specified (input number %d)', i);
+                            try
+                                fprintf('Doing id %d (%d):\n\t %s\n\t %s', i, N, fix{i}, rot{i})
+                                
+                                if ~isempty(fix{i}) && ~isempty(rot{i})
+                                    shape_i = ZEAL(fix{i}, 'rot', rot{i}, zealOptions);
+                                else
+                                    warning('No structure pair specified (input number %d)', i);
+                                end
+                                
+                                fix_descriptors(i,:) = shape_i.fixed.ZC.Descriptors;
+                                rot_descriptors(i,:) = shape_i.fixed.ZC.Descriptors;
+                                score(i) = shape_i.Score;
+                                
+                            catch ME
+                                warning(ME.message)
                             end
-                            
-                            fix_descriptors(i,:) = shape_i.fixed.ZC.Descriptors;
-                            rot_descriptors(i,:) = shape_i.fixed.ZC.Descriptors;
-                            score(i) = shape_i.Score;
                             
                         end
                         
@@ -194,36 +208,48 @@ classdef ZEALbatch
                     
                     if parOp
                         
-                        D = parallel.pool.DataQueue;
-                        afterEach(D, @updateParStatus);
-                        parCount = 1;
-                       
+                        %                         D = parallel.pool.DataQueue;
+                        %                         afterEach(D, @updateParStatus);
+                        %                         parCount = 1;
+                        
                         parfor i = 1:N
                             
-                             fprintf('\n Doing id %d (%d): \n\t%s', i, N, fix{i})
-                            
-                            if ~isempty(fix{i})
-                                shape_i = ZEAL(fix{i}, zealOptions);
-                                fix_descriptors(i,:) = shape_i.fixed.ZC.Descriptors;
-                            else
-                                warning('No structure specified (input number %d)', i);
+                            try
+                                
+                                fprintf('\n Doing id %d (%d): \n\t%s', i, N, fix{i})
+                                
+                                if ~isempty(fix{i})
+                                    shape_i = ZEAL(fix{i}, zealOptions);
+                                    fix_descriptors(i,:) = shape_i.fixed.ZC.Descriptors;
+                                else
+                                    warning('No structure specified (input number %d)', i);
+                                end
+                                
+                                %                             D.send(i);
+                                
+                            catch ME
+                                warning(ME.message)
                             end
-                            
-%                             D.send(i);
                         end
                         
                     else
-
-                       
+                        
+                        
                         for i = 1:N
                             
-                            fprintf('\n Doing id %d (%d): \n\t%s', i, N, fix{i})
-                            
-                            if ~isempty(fix{i})
-                                shape_i = ZEAL(fix{i}, zealOptions);
-                                fix_descriptors(i,:) = shape_i.fixed.ZC.Descriptors;
-                            else
-                                warning('No structure specified (input number %d)', i);
+                            try
+                                
+                                fprintf('\n Doing id %d (%d): \n\t%s', i, N, fix{i})
+                                
+                                if ~isempty(fix{i})
+                                    shape_i = ZEAL(fix{i}, zealOptions);
+                                    fix_descriptors(i,:) = shape_i.fixed.ZC.Descriptors;
+                                else
+                                    warning('No structure specified (input number %d)', i);
+                                end
+                                
+                            catch ME
+                                warning(ME.message)
                             end
                             
                         end
@@ -238,18 +264,20 @@ classdef ZEALbatch
                 
             catch ME
                 
-                error(ME.message);
+                warning(ME.message);
                 
             end
             
             obj.Results.ComputationTime = toc(startTime);
             
-%             function [] = updateParStatus(~)
-%                 
-%                 fprintf('\n Progress: %2.2f', parCount/obj.Batch.N);
-%                 parCount = parCount +1;
-%                 
-%             end
+            fprintf('\n\n Batch job finished.\n Total computation time: %3.2f min \n\t %3.2f s per structure', obj.Results.ComputationTime/60, obj.Results.ComputationTime/N);
+            
+            %             function [] = updateParStatus(~)
+            %
+            %                 fprintf('\n Progress: %2.2f', parCount/obj.Batch.N);
+            %                 parCount = parCount +1;
+            %
+            %             end
             
             
         end
