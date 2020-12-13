@@ -281,10 +281,14 @@ classdef ZEAL < handle
                 
                 if isempty(p.Results.rot)
                     obj.AlignMode = false;
-                    fprintf('\n\n Running ZEAL in single mode');
+                    if obj.Logging.Level > 0
+                        fprintf('\n\n Running ZEAL in single mode');
+                    end
                 else % rot structure given -> align mode activated
                     obj.AlignMode = true;
-                    fprintf('\n\n Running ZEAL in Align mode');
+                    if obj.Logging.Level > 0
+                        fprintf('\n\n Running ZEAL in Align mode');
+                    end
                 end
                 
                 
