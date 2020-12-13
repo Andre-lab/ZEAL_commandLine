@@ -9,6 +9,7 @@ classdef ZEALbatch
     % batchList = {{'S11','S12'},{'S21','S22'},{'S31','S32'}}
     
     % If using Python, specify batch list as a list of lists
+    % batchList = [["sample_data/highTMset/1_2JERA_3H7CX/2JERA.pdb", "sample_data/highTMset/1_2JERA_3H7CX/3H7CX.pdb"],["sample_data/highTMset/2_2O90A_5F3MA/2O90A.pdb", "sample_data/highTMset/2_2O90A_5F3MA/5F3MA.pdb"],["3KTIA","5C90A"]]
     % batchList = [["S11","S12"],["S21","S22"],["S31","S32"]]
     
     % Python: get second structure-pair
@@ -45,22 +46,16 @@ classdef ZEALbatch
     % batchFile = 'sample_data/fileList_download_align.csv';
     %
     % parop = false;
-    % nworkers = 2;
-    %
-    % if parop
-    %
-    %     if isempty(gcp)
-    %         parpool(nworkers)
-    %     end
-    %
-    %     pool = gcp;
-    %
-    % end
+    
     
     properties
         Batch
         AlignMode
         Results
+    end
+    
+    properties (Hidden)
+        pool
     end
     
     methods
@@ -77,7 +72,7 @@ classdef ZEALbatch
                 
                 obj.Batch.Fixed = fixed;
                 obj.Batch.Rotating = rotating;
-                    
+                
             else
                 
                 error('Batch list has to be specified as a matlab cell array or as a csv-file.');
@@ -91,16 +86,28 @@ classdef ZEALbatch
             
             % defaults
             default_parallel = false;
-            
+            defualt_numCores = 4;
             p = inputParser;
             p.KeepUnmatched = true;
             
             addOptional(p, 'parallel', default_parallel);
+            addOptional(p, 'numCores', defualt_numCores);
             
             parse(p, varargin{:});
             
             parOp = p.Results.parallel;
+            numCores = p.Results.numCores;
             
+            % set up parpool
+            if parOp
+                
+                if isempty(gcp)
+                    parpool(numCores)
+                end
+                
+                obj.pool = gcp;
+                
+            end
             
             % Get options for ZEAL, both default and any supplied in this constructor
             
@@ -113,31 +120,67 @@ classdef ZEALbatch
             rot_descriptors = zeros(obj.Batch.N, nInvariants);
             score = zeros(obj.Batch.N, 1);
             
+            % set non_default options for ZEAL
             if isempty(varargin)
-                zealOptions.Order = 20;
-            else                
+                %                 zealOptions.Order = 20;
+                zealOptions.Order = struct;
+            else
                 zealOptions = p.Unmatched;
             end
             
+            startTime = tic;
+            
             try
+                
+                N = obj.Batch.N;
                 
                 if obj.AlignMode % ALIGN MODE
                     
                     fix = obj.Batch.Fixed;
                     rot = obj.Batch.Rotating;
                     
-                    % parfor i = 1:obj.Batch.N
-                    for i = 1:obj.Batch.N
+                    if parOp
                         
-                        if ~isempty(fix{i}) && ~isempty(rot{i})
-                            shape_i = ZEAL(fix{i}, 'rot', rot{i}, zealOptions);
-                        else
-                            warning('No structure pair specified (input number %d)', i);
+%                         D = parallel.pool.DataQueue;
+%                         afterEach(D, @updateParStatus);
+%                         parCount = 1;
+                   
+                        parfor i = 1:obj.Batch.N
+                            
+                             fprintf('Doing id %d (%d):\n\t %s\n\t %s', i, N, fix{i}, rot{i})
+                            
+                            if ~isempty(fix{i}) && ~isempty(rot{i})
+                                shape_i = ZEAL(fix{i}, 'rot', rot{i}, zealOptions);
+                            else
+                                warning('No structure pair specified (input number %d)', i);
+                            end
+                            
+                            fix_descriptors(i,:) = shape_i.fixed.ZC.Descriptors;
+                            rot_descriptors(i,:) = shape_i.fixed.ZC.Descriptors;
+                            score(i) = shape_i.Score;
+                            
+%                             D.send(i);
+                            
                         end
                         
-                        fix_descriptors(i,:) = shape_i.fixed.ZC.Descriptors;
-                        rot_descriptors(i,:) = shape_i.fixed.ZC.Descriptors;
-                        score(i) = shape_i.Score;
+                    else
+                        
+                        for i = 1:N
+                            
+                            fprintf('Doing id %d (%d):\n\t %s\n\t %s', i, N, fix{i}, rot{i})
+                            
+                            if ~isempty(fix{i}) && ~isempty(rot{i})
+                                shape_i = ZEAL(fix{i}, 'rot', rot{i}, zealOptions);
+                            else
+                                warning('No structure pair specified (input number %d)', i);
+                            end
+                            
+                            fix_descriptors(i,:) = shape_i.fixed.ZC.Descriptors;
+                            rot_descriptors(i,:) = shape_i.fixed.ZC.Descriptors;
+                            score(i) = shape_i.Score;
+                            
+                        end
+                        
                     end
                     
                     % Gather (adapted for parfor)
@@ -149,19 +192,46 @@ classdef ZEALbatch
                     
                     fix = obj.Batch.Fixed;
                     
-                    % parfor i = 1:obj.Batch.N
-                    for i = 1:obj.Batch.N
+                    if parOp
                         
-                        if ~isempty(fix{i})
-                            shape_i = ZEAL(fix{i}, zealOptions);
-                            fix_descriptors(i,:) = shape_i.fixed.ZC.Descriptors;
-                        else
-                            warning('No structure specified (input number %d)', i);
+                        D = parallel.pool.DataQueue;
+                        afterEach(D, @updateParStatus);
+                        parCount = 1;
+                       
+                        parfor i = 1:N
+                            
+                             fprintf('\n Doing id %d (%d): \n\t%s', i, N, fix{i})
+                            
+                            if ~isempty(fix{i})
+                                shape_i = ZEAL(fix{i}, zealOptions);
+                                fix_descriptors(i,:) = shape_i.fixed.ZC.Descriptors;
+                            else
+                                warning('No structure specified (input number %d)', i);
+                            end
+                            
+%                             D.send(i);
                         end
+                        
+                    else
+
+                       
+                        for i = 1:N
+                            
+                            fprintf('\n Doing id %d (%d): \n\t%s', i, N, fix{i})
+                            
+                            if ~isempty(fix{i})
+                                shape_i = ZEAL(fix{i}, zealOptions);
+                                fix_descriptors(i,:) = shape_i.fixed.ZC.Descriptors;
+                            else
+                                warning('No structure specified (input number %d)', i);
+                            end
+                            
+                        end
+                        
+                        % Gather (adapted for parfor)
+                        obj.Results.Fixed.Descriptors = fix_descriptors;
+                        
                     end
-                    
-                    % Gather (adapted for parfor)
-                    obj.Results.Fixed.Descriptors = fix_descriptors;
                     
                 end
                 
@@ -171,6 +241,16 @@ classdef ZEALbatch
                 error(ME.message);
                 
             end
+            
+            obj.Results.ComputationTime = toc(startTime);
+            
+%             function [] = updateParStatus(~)
+%                 
+%                 fprintf('\n Progress: %2.2f', parCount/obj.Batch.N);
+%                 parCount = parCount +1;
+%                 
+%             end
+            
             
         end
         
@@ -182,7 +262,7 @@ classdef ZEALbatch
         function [fixed, rotating] = importBatchFile(batchFile)
             
             try
-                           
+                
                 fid = fopen(batchFile);
                 tline = fgetl(fid);
                 
@@ -218,13 +298,13 @@ classdef ZEALbatch
                 end
                 
                 fclose(fid);
-                           
+                
             catch ME
                 
                 fprintf(ME.message);
                 
             end
-                        
+            
         end
         
         function [fixed, rotating] = importCell(batchList)
@@ -282,16 +362,14 @@ classdef ZEALbatch
             
             %fixed_empty_tf = cellfun(@isempty,batch.Rixed);
             rotating_empty_tf = cellfun(@isempty,batch.Rotating);
-                
-                if sum(rotating_empty_tf) > 0
-                    AlignMode = false;
-                else
-                    AlignMode = true;
-                end     
-                
+            
+            if sum(rotating_empty_tf) > 0
+                AlignMode = false;
+            else
+                AlignMode = true;
+            end
+            
         end
-        
-        
         
         
     end % methods (Static)
