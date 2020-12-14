@@ -577,20 +577,22 @@ classdef ZEAL < handle
             
             expectedStructures = {'fixed', 'rotating', 'all'};
             
-            if ~isempty(obj.rotating)
-                defaultStructure = 'all';
-            else
-                defaultStructure = 'fixed';
-            end
-            
             % set defaults
             defaultPath = pwd;
             
             defaultHetatoms = false;
             defaultAll = false;
             
-            defaultFixName = [obj.fixed.PDB.name '_ZEAL.pdb'];
+            defaultFixName = [obj.fixed.PDB.Source.Name '_ZEAL.pdb'];
             
+            if ~isempty(obj.rotating)
+                defaultStructure = 'all';
+                defaultRotName = [obj.rotating.PDB.Source.Name '_ZEAL.pdb'];
+            else
+                defaultStructure = 'fixed';
+                defaultRotName = '';
+            end
+          
             % do option parsing
             p = inputParser;
             
@@ -609,6 +611,9 @@ classdef ZEAL < handle
             includeHetatoms = p.Results.includeHetatoms;
             includeAll = p.Results.includeAll;
             folderpath = p.Results.folderPath;
+            
+            fixName = p.Results.fixName;
+            rotName = p.Results.rotName;
             
             saveSuccessFul = false;
             
