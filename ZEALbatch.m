@@ -269,8 +269,11 @@ classdef ZEALbatch
             end
             
             obj.Results.ComputationTime = toc(startTime);
+           
             
-            fprintf('\n\n Batch job finished.\n Total computation time: %3.2f min \n\t %3.2f s per structure', obj.Results.ComputationTime/60, obj.Results.ComputationTime/N);
+            fprintf('\n\n Batch job finished.');
+            fprintf('\n Total computation time: %s (HH:MM:SS)', datestr(seconds(obj.Results.ComputationTime),'HH:MM:SS'));
+            fprintf('\n                         %3.2f s per structure', obj.Results.ComputationTime/N);
             
             %             function [] = updateParStatus(~)
             %
