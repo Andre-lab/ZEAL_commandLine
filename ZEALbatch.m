@@ -39,14 +39,7 @@ classdef ZEALbatch
     % Ex. See /sample_data/fileList_singleMode.csv in sample_data in this folder.
     
     
-    
-    %in batch mode, where a ZEAL session is started
-    % for
-    % C
-    % batchFile = 'sample_data/fileList_download_align.csv';
-    %
-    % parop = false;
-    
+    % TODO: "DRY" the code when outputting to PDB files
     
     properties
         Batch
@@ -87,20 +80,25 @@ classdef ZEALbatch
             % defaults
             default_parallel = false;
             defualt_numCores = 4;
-            default_displayWarnings = true;
-            
+            default_PDBoutput = false;
+            default_outputPath = pwd;
             p = inputParser;
             p.KeepUnmatched = true;
             
             addOptional(p, 'parallel', default_parallel);
             addOptional(p, 'numCores', defualt_numCores);
-            addOptional(p, 'displayWarnings', default_displayWarnings);
+            addOptional(p, 'PDBoutput', default_PDBoutput);
+            addOptional(p, 'outputPath', default_outputPath);
+            
             
             parse(p, varargin{:});
             
             parOp = p.Results.parallel;
             numCores = p.Results.numCores;
-            displayWarnings = p.Results.displayWarnings;
+            PDBoutput = p.Results.PDBoutput;
+            outputPath = p.Results.outputPath;
+            
+            
             % set up parpool
             if parOp
                 
@@ -165,6 +163,17 @@ classdef ZEALbatch
                                 rot_descriptors(i,:) = shape_i.fixed.ZC.Descriptors;
                                 score(i) = shape_i.Score;
                                 
+                                if PDBoutput
+                                    [~, name, ~] = fileparts(fix{i});
+                                    fix_savename = sprintf('%d_%s_ZEAL.pdb', i, name);
+                                    
+                                    [~, name, ~] = fileparts(rot{i});
+                                    rot_savename = sprintf('%d_%s_ZEAL.pdb', i, name);
+                                    
+                                    save2pdb(shape_i, 'fixName', fix_savename, 'rotName', rot_savename, 'folderPath', outputPath);
+                                    
+                                end
+                                
                                 %                             D.send(i);
                             catch ME
                                 warning(ME.message)
@@ -188,6 +197,17 @@ classdef ZEALbatch
                                 fix_descriptors(i,:) = shape_i.fixed.ZC.Descriptors;
                                 rot_descriptors(i,:) = shape_i.fixed.ZC.Descriptors;
                                 score(i) = shape_i.Score;
+                                
+                                if PDBoutput
+                                    [~, name, ~] = fileparts(fix{i});
+                                    fix_savename = sprintf('%d_%s_ZEAL.pdb', i, name);
+                                    
+                                    [~, name, ~] = fileparts(rot{i});
+                                    rot_savename = sprintf('%d_%s_ZEAL.pdb', i, name);
+                                    
+                                    save2pdb(shape_i, 'fixName', fix_savename, 'rotName', rot_savename, 'folderPath', outputPath);
+                                    
+                                end
                                 
                             catch ME
                                 warning(ME.message)
@@ -225,6 +245,12 @@ classdef ZEALbatch
                                     warning('No structure specified (input number %d)', i);
                                 end
                                 
+                                if PDBoutput
+                                    [~, name, ~] = fileparts(fix{i});
+                                    fix_savename = sprintf('%d_%s_ZEAL.pdb', i, name);
+                                    
+                                    save2pdb(shape_i, 'fixName', fix_savename, 'folderPath', outputPath);
+                                end
                                 %                             D.send(i);
                                 
                             catch ME
@@ -248,6 +274,13 @@ classdef ZEALbatch
                                     warning('No structure specified (input number %d)', i);
                                 end
                                 
+                                if PDBoutput
+                                    [~, name, ~] = fileparts(fix{i});
+                                    fix_savename = sprintf('%d_%s_ZEAL.pdb', i, name);
+                                    
+                                    save2pdb(shape_i, 'fixName', fix_savename, 'folderPath', outputPath);
+                                end
+                                
                             catch ME
                                 warning(ME.message)
                             end
@@ -269,12 +302,15 @@ classdef ZEALbatch
             end
             
             obj.Results.ComputationTime = toc(startTime);
-           
+            
             
             fprintf('\n\n Batch job finished.');
             fprintf('\n Total computation time: %s (HH:MM:SS)', datestr(seconds(obj.Results.ComputationTime),'HH:MM:SS'));
-            fprintf('\n                         %3.2f s per structure', obj.Results.ComputationTime/N);
-            
+            if obj.AlignMode
+                fprintf('\n                         %3.2f s / alignment', obj.Results.ComputationTime/N);
+            else
+                fprintf('\n                         %3.2f s / structure', obj.Results.ComputationTime/N);
+            end
             %             function [] = updateParStatus(~)
             %
             %                 fprintf('\n Progress: %2.2f', parCount/obj.Batch.N);
