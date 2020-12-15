@@ -130,9 +130,14 @@ classdef PDB < handle
                     case '.cif'
                         obj.AllData = PDB.readCIFdata(fullfile(obj.Source.Path, [obj.Source.Name obj.Source.Ext] ));
                     otherwise
-                        error('Files have to have extension .pdb or .cif in order for me to parse it (yes it''s that stupid).')
+                        try
+                            obj.AllData = PDB.readPDBfile(fullfile(obj.Source.Path, [obj.Source.Name obj.Source.Ext] ));
+                        catch ME
+                            error('Files have to have extension .pdb or .cif. Assumed it was .pdb but did not work apparently.')
+                        end
+                        
                 end
-                               
+                
                 if obj.ShowLog
                     fprintf('\n\t Done. Execution time: %2.2e s', toc(startTime));
                 end
