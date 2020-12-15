@@ -395,7 +395,7 @@ classdef ZEALbatch
                     
                     if ~isempty(i_pair)
                         
-                        if numel(batchList{i}) == 1
+                        if ~iscell(i_pair)
                             
                             fixed{i} = i_pair;
                             
