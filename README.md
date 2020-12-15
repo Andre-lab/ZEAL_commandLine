@@ -10,6 +10,13 @@ see the publication [publication](https://academic.oup.com/bioinformatics):
 
         F. Ljung and I. André, ZEAL: Protein structure alignment based on shape similarity, *Bioinformatics* XX (2020)
 
+# Table of contents 
+- [Requirements](#requirements)
+- [Input](#input)
+- [Output](#output)
+- [Optional input](#optional-input)
+- [ZEAL batch (parallel)](#zeal-batch-(parallel))
+- [Using the Python API](#using-the-python-api)
 
 # Requirements
 
@@ -36,7 +43,7 @@ ZEAL uses functions from these toolboxes which have to be installed (included in
    -  `symbolic_toolbox`           *Symbolic Math Toolbox* 
 
   
-# Abbreviations
+## Abbreviations
 
    -  **ZC** Zernike-Canterakis 
    -  **MS** Molecular surface 
@@ -244,11 +251,11 @@ ans = 0.0253
 
 ## Structures
 
-Aligned structrues can be saved to PDB files using the save2pdb method. 
+Aligned structrues can be saved to PDB files using the `save2pdb` method. 
 By default, both the fixed and rotating structure are exported to the current 
 directory (see below on how to change). The names of the new pdb files have 
-the format `originalname_ZEAL.pdb `(this can't be changed)`. `Also, HETATM 
-records are omitted but this can be changed (se below).
+the format `originalname_ZEAL.pdb` by default, but can be changed (see below). Also, HETATM 
+records are omitted by default  but can be changed (see below).
 
 
 
@@ -320,7 +327,18 @@ save2pdb(shapeAlignData, 'folderPath', '/Users/yourUserName/Desktop')
 shapeAlignData.save2pdb('folderPath', '/Users/yourUserName/Desktop')
 ```
 
+To ***save files with specific name***, use 
+
+ ```matlab:Code(Display)
+save2pdb(shapeAlignData, 'fixName', 'fixed_structure', )
+
+% or 
+
+shapeAlignData.save2pdb('folderPath', '/Users/yourUserName/Desktop')
+```
+
   
+
 # Optional input
 
 
@@ -380,6 +398,15 @@ inputStruct.GridRes = 100;
 
 ZEAL('5mok', inputStruct)
 ```
+
+# ZEALbatch (parallel)
+ZEAL can be run in a batch mode using `ZEALbatch`, which takes a list of 
+structures (or "structure-1,structure-2" pairs) and returns ZCDs (or shape
+alignments) for all of them. The list can either be given as a text-file or 
+as a MATLAB cell array. 
+
+
+# Using the Python API
 
   
 
