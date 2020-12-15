@@ -4,23 +4,11 @@ classdef ZEALbatch
     % from structures specified in a Matlab cell array or in a CSV file
     
     % INPUT
-    
-    % CELL ARRAY
-    % batchList = {{'S11','S12'},{'S21','S22'},{'S31','S32'}}
-    
-    % If using Python, specify batch list as a list of lists
-    % batchList = [["sample_data/highTMset/1_2JERA_3H7CX/2JERA.pdb", "sample_data/highTMset/1_2JERA_3H7CX/3H7CX.pdb"],["sample_data/highTMset/2_2O90A_5F3MA/2O90A.pdb", "sample_data/highTMset/2_2O90A_5F3MA/5F3MA.pdb"],["3KTIA","5C90A"]]
-    % batchList = [["S11","S12"],["S21","S22"],["S31","S32"]]
-    
-    % Python: get second structure-pair
-    % batchList[1]
-    %
-    % Python: get second structure in second structure pair
-    % batchList[1][1]
-    
-    % CSV FILE
-    % CSV format: ZEAL ALign Mode
-    %1_pdbID_or_file,2_pdbID_or_file
+   
+    % TEXT FILE : ZEAL ALign Mode
+    % ---------------------------------
+    % CSV format
+    % 1_pdbID_or_file,2_pdbID_or_file
     
     % By default, the second structure is defined as the "rotating"
     % structure
@@ -29,17 +17,36 @@ classdef ZEALbatch
     
     % where each line contains the PDB ID (+optional chain ID) or the filepath to a PDB or CIF file for a pair of structures
     
-    % CSV format: ZEAL Single Mode
-    
+    % TEXT FILE : ZEAL Single Mode
+    % ---------------------------------
     % subsequent lines: 1_pdbID_or_file,2_pdbID_or_file
     
     % where each line contains the PDB ID (+optional chain ID) or the
     % filepath to a PDB or CIF file for a structure
     
-    % Ex. See /sample_data/fileList_singleMode.csv in sample_data in this folder.
+    % Ex. See /sample_data/fileList_singleMode.txt in sample_data in this folder.
     
+    % CELL ARRAY
+    % ---------------------------------
+    % batchList_alignMode = {{'S11','S12'},{'S21','S22'},{'S31','S32'}}
+    % batchList_singleMode = {'S1','S2,'S3','S4','S5','S6'}
     
-    % TODO: "DRY" the code when outputting to PDB files
+    % If using Python, specify batch list as a list of lists
+    
+    % batchList_alignMode = [["S11","S12"],["S21","S22"],["S31","S32"]]
+    % batchList_singleMode = ["S1","S2","S3","S4","S5",S6"]
+    
+    % batchList_alignMode = [["sample_data/highTMset/1_2JERA_3H7CX/2JERA.pdb", "sample_data/highTMset/1_2JERA_3H7CX/3H7CX.pdb"],["sample_data/highTMset/2_2O90A_5F3MA/2O90A.pdb", "sample_data/highTMset/2_2O90A_5F3MA/5F3MA.pdb"],["3KTIA","5C90A"]]
+   
+    % ---------------------------------
+    % TODO: "DRY" the code 
+    % TODO: Unit test class
+    % ---------------------------------
+    
+    % Filip (Persson) Ljung 
+    %
+    % filip.persson@gmail.com
+    % 2020-12
     
     properties
         Batch
@@ -55,6 +62,7 @@ classdef ZEALbatch
         
         function obj = ZEALbatch(batchList, varargin)
             
+            % IMPORT JOB LIST
             if iscell(batchList)
                 
                 [obj.Batch.Fixed, obj.Batch.Rotating] = ZEALbatch.importCell(batchList);
@@ -75,29 +83,27 @@ classdef ZEALbatch
             obj.Batch.N = length(obj.Batch.Fixed);
             obj.AlignMode = ZEALbatch.checkAlignMode(obj.Batch);
             
-            % inputs
+            % OPTIONAL ARGUMENTS
             
             % defaults
-            default_parallel = false;
-            defualt_numCores = 4;
+            default_Parallel = false;
+            defualt_NumCores = 4;
             default_PDBoutput = false;
-            default_outputPath = pwd;
+            default_OutputPath = pwd;
             p = inputParser;
             p.KeepUnmatched = true;
             
-            addOptional(p, 'parallel', default_parallel);
-            addOptional(p, 'numCores', defualt_numCores);
+            addOptional(p, 'Parallel', default_Parallel);
+            addOptional(p, 'NumCores', defualt_NumCores);
             addOptional(p, 'PDBoutput', default_PDBoutput);
-            addOptional(p, 'outputPath', default_outputPath);
-            
+            addOptional(p, 'OutputPath', default_OutputPath);
             
             parse(p, varargin{:});
             
-            parOp = p.Results.parallel;
-            numCores = p.Results.numCores;
+            parOp = p.Results.Parallel;
+            numCores = p.Results.NumCores;
             PDBoutput = p.Results.PDBoutput;
-            outputPath = p.Results.outputPath;
-            
+            outputPath = p.Results.OutputPath;
             
             % set up parpool
             if parOp
@@ -117,7 +123,6 @@ classdef ZEALbatch
             end
             
             % Get options for ZEAL, both default and any supplied in this constructor
-            
             ZEAL_options = ZEAL('dummy', 'InputParserOnly', true, p.Unmatched);
             
             % Preallocate arrays for holding results
@@ -129,7 +134,7 @@ classdef ZEALbatch
             
             % set non_default options for ZEAL
             if isempty(varargin)
-                %                 zealOptions.Order = 20;
+                % zealOptions.Order = 20;
                 zealOptions = struct;
             else
                 zealOptions = p.Unmatched;
@@ -148,10 +153,9 @@ classdef ZEALbatch
                     
                     if parOp
                         
-                        %                         D = parallel.pool.DataQueue;
-                        %                         afterEach(D, @updateParStatus);
-                        %                         parCount = 1;
-                        
+                        % D = parallel.pool.DataQueue;
+                        % afterEach(D, @updateParStatus);
+                        % parCount = 1;
                         
                         parfor i = 1:obj.Batch.N
                             
@@ -180,14 +184,15 @@ classdef ZEALbatch
                                     
                                 end
                                 
-                                %                             D.send(i);
+                                % D.send(i);
+                                
                             catch ME
                                 warning(ME.message)
                             end
                             
                         end
                         
-                    else
+                    else % parOp false
                         
                         for i = 1:N
                             
@@ -234,9 +239,9 @@ classdef ZEALbatch
                     
                     if parOp
                         
-                        %                         D = parallel.pool.DataQueue;
-                        %                         afterEach(D, @updateParStatus);
-                        %                         parCount = 1;
+                        % D = parallel.pool.DataQueue;
+                        % afterEach(D, @updateParStatus);
+                        % parCount = 1;
                         
                         parfor i = 1:N
                             
@@ -257,7 +262,8 @@ classdef ZEALbatch
                                     
                                     save2pdb(shape_i, 'fixName', fix_savename, 'folderPath', outputPath);
                                 end
-                                %                             D.send(i);
+                                
+                                % D.send(i);
                                 
                             catch ME
                                 warning(ME.message)
@@ -267,8 +273,7 @@ classdef ZEALbatch
                         
                         obj.Results.Fixed.Descriptors = fix_descriptors;
                         
-                    else
-                        
+                    else % parOp false
                         
                         for i = 1:N
                             
@@ -303,7 +308,6 @@ classdef ZEALbatch
                     
                 end
                 
-                
             catch ME
                 
                 warning(ME.message);
@@ -320,13 +324,13 @@ classdef ZEALbatch
             else
                 fprintf('\n                         %3.2f s / structure', obj.Results.ComputationTime/N);
             end
+            
             %             function [] = updateParStatus(~)
             %
             %                 fprintf('\n Progress: %2.2f', parCount/obj.Batch.N);
             %                 parCount = parCount +1;
             %
             %             end
-            
             
         end
         
