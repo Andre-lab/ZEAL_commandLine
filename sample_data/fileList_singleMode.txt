@@ -1,0 +1,12 @@
+sample_data/highTMset/1_2JERA_3H7CX/2JERA.pdb
+sample_data/highTMset/1_2JERA_3H7CX/3H7CX.pdb
+sample_data/highTMset/2_2O90A_5F3MA/2O90A.pdb
+sample_data/highTMset/2_2O90A_5F3MA/5F3MA.pdb
+sample_data/highTMset/3_3KTIA_5C90A/3KTIA.pdb
+sample_data/highTMset/3_3KTIA_5C90A/5C90A.pdb
+sample_data/highTMset/4_3OP4A_2PNFA/3OP4A.pdb
+sample_data/highTMset/4_3OP4A_2PNFA/2PNFA.pdb
+sample_data/highTMset/5_3NRRA_6KP7A/3NRRA.pdb
+sample_data/highTMset/5_3NRRA_6KP7A/6KP7A.pdb
+5MOKA
+2HO1A
