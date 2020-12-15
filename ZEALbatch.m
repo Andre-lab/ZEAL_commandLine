@@ -130,7 +130,7 @@ classdef ZEALbatch
             % set non_default options for ZEAL
             if isempty(varargin)
                 %                 zealOptions.Order = 20;
-                zealOptions.Order = struct;
+                zealOptions = struct;
             else
                 zealOptions = p.Unmatched;
             end
