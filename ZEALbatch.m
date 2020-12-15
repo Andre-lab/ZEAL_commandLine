@@ -256,7 +256,10 @@ classdef ZEALbatch
                             catch ME
                                 warning(ME.message)
                             end
+                                                                                    
                         end
+                        
+                        obj.Results.Fixed.Descriptors = fix_descriptors;
                         
                     else
                         
