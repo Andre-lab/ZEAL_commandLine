@@ -137,7 +137,7 @@ classdef ZEALbatch
             
             startTime = tic;
             
-            try
+%             try
                 
                 N = obj.Batch.N;
                 
@@ -272,7 +272,7 @@ classdef ZEALbatch
                         
                         for i = 1:N
                             
-                            try
+%                             try
                                 
                                 fprintf('\n Doing id %d (%d): \n\t%s', i, N, fix{i})
                                 
@@ -290,9 +290,9 @@ classdef ZEALbatch
                                     save2pdb(shape_i, 'fixName', fix_savename, 'folderPath', outputPath);
                                 end
                                 
-                            catch ME
-                                warning(ME.message)
-                            end
+%                             catch ME
+%                                 warning(ME.message)
+%                             end
                             
                         end
                         
@@ -304,11 +304,11 @@ classdef ZEALbatch
                 end
                 
                 
-            catch ME
-                
-                warning(ME.message);
-                
-            end
+%             catch ME
+%                 
+%                 warning(ME.message);
+%                 
+%             end
             
             obj.Results.ComputationTime = toc(startTime);
             
@@ -386,7 +386,7 @@ classdef ZEALbatch
         function [fixed, rotating] = importCell(batchList)
             
             fixed = cell(numel(batchList),1);
-            rotating = fixed;
+            rotating = cell(numel(batchList),1);
             
             try
                 for i = 1:length(batchList)
@@ -395,7 +395,7 @@ classdef ZEALbatch
                     
                     if ~isempty(i_pair)
                         
-                        if numel(batchList(i)) == 1
+                        if numel(batchList{i}) == 1
                             
                             fixed{i} = i_pair;
                             
