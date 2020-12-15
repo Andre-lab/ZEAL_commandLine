@@ -484,7 +484,7 @@ eng = matlab.engine.start_matlab()
 shape_data_single = eng.ZEAL('5mok.pdb','fix_chainID', 'A')
 
 ```
-`
+
 ### Aligning two structures
 
 ```
@@ -501,7 +501,7 @@ eng.save2pdb(shape_data)
 
 ## Accessing the results and other object properties
 
-1) ZEAL get-methods (for shape descriptors and moments only)
+1) **ZEAL get-methods** (for shape descriptors and moments only)
 ```
     ZCDs = eng.getShapeDescriptors(shape_data_single)
 
@@ -514,7 +514,7 @@ eng.save2pdb(shape_data)
 
 ```
 
-2) Dot-notation
+2) **Dot-notation** 
     All properties (fields) in the ZEAL object (such as the shape descriptors and moments) can be accessed directly using dot-notation after copying the python variable to the Matlab workspace
 
 ```
@@ -524,7 +524,7 @@ eng.save2pdb(shape_data)
     ZCDs_rot = eng.eval("shape_data.rotating.ZC.Descriptors")
 ```
 
-3) eng.getfield
+3) **eng.getfield**
     An alternative (although a bit cumbersome) way is to use the getfield method in the API like so
 
 ```
@@ -539,11 +539,16 @@ eng.save2pdb(shape_data)
 The following usage of ZEAL will result in a memory leak
 
 ```
+import matlab.engine
 
+eng = matlab.engine.start_matlab()
+
+for i in range(1,100):
+    shape_data = eng.ZEAL('sample_data/5mok.pdb','fix_chainID', 'A’)
 ```
 
-The bug has been traced to the handle class when using the API. Mathworks has been notified 
-about this and will communicate when this bug is resolved. Use ´ZEALbatch´ (see below) instead for multiple jobs using parallel computation 
+The bug has been traced to the handle class when using the API. Mathworks has verified the bug notified 
+ will communicate when it is resolved. Use ´ZEALbatch´ (see below) instead for multiple jobs using parallel computation 
 
 ## ZEALbatch
 Input structures can be given to ZEALbatch as a Python list (ZEAL singleMode) or as a list of lists (ZEAL alignMode)
