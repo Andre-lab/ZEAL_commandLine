@@ -82,7 +82,7 @@ classdef ZEAL < handle
             % 'InputParserOnly'       : true/false (false)
             % If true then only the option parsing is performed
             %
-            % 'LogOption'       : 'basic' / 'standard' / 'detailed' / 'none' ('standard')
+            % 'LogLevel'       : 'basic' / 'standard' / 'detailed' / 'none' ('standard')
             % Sets the level of information printed to the console.
             % 'detailed' not recommended unless option 'AlignLater' is set
             % to true;
@@ -573,6 +573,9 @@ classdef ZEAL < handle
             %
             % 'folderPath'      :   char : current directory
             %
+            % 'fixName'         :   char  : <source_name>_ZEAL.pdb
+            %
+            % 'rotName'         :   char  : <source_name>_ZEAL.pdb
             
             
             expectedStructures = {'fixed', 'rotating', 'all'};
