@@ -15,7 +15,7 @@ see the publication [publication](https://academic.oup.com/bioinformatics):
 - [Input](#input)
 - [Output](#output)
 - [Optional input](#optional-input)
-- [ZEAL batch (parallel)](#zeal-batch-(parallel))
+- [ZEAL batch-mode (parallel)](#zeal-batch-(parallel))
 - [Using the Python API](#using-the-python-api)
 
 # Requirements
@@ -257,6 +257,16 @@ directory (see below on how to change). The names of the new pdb files have
 the format `originalname_ZEAL.pdb` by default, but can be changed (see below). Also, HETATM 
 records are omitted by default  but can be changed (see below).
 
+Optional arguments 
+
+|'option name' |  expected value/type | default value | description |
+|:--:|:--:|:--:|:--:|
+| 'structure'  |  'fixed'/'rotating'/'all' | 'all' | Selects which structure(s) to save | 
+| 'includeAll' | true/false | false | If true, then all records from the original PDB files are included in the file. |
+| 'includeHetatoms' | true/false | false | If true, then ATOM+HETATM record are included |
+| 'folderPath' | char | current directory | The folder to save files to |
+| 'fixName'    | char | <source_name>_ZEAL.pdb | The name for the fixed structure |
+| 'rotName'    | char |  <source_name>_ZEAL.pdb  | The name for the rotating structure |
 
 
 ```matlab:Code
@@ -277,10 +287,7 @@ outputting PDB in file 2ho1A_ZEAL.pdb ...
 ```
 
 
-
 To export ***all records***, use
-
-
 
 ```matlab:Code(Display)
 save2pdb(shapeAlignData, 'includeAll', true)
@@ -290,7 +297,6 @@ save2pdb(shapeAlignData, 'includeAll', true)
 shapeAlignData.save2pdb('includeAll', true)
 
 ```
-
 
 
 If the original pdb file contains multiple chains, and the alignment was done 
@@ -318,23 +324,16 @@ shapeAlignData.save2pdb('includeHetatoms', true)
 To ***save to specific directory***, use 
 
 
-
 ```matlab:Code(Display)
 save2pdb(shapeAlignData, 'folderPath', '/Users/yourUserName/Desktop')
 
-% or 
-
-shapeAlignData.save2pdb('folderPath', '/Users/yourUserName/Desktop')
 ```
 
 To ***save files with specific name***, use 
 
  ```matlab:Code(Display)
-save2pdb(shapeAlignData, 'fixName', 'fixed_structure', )
+save2pdb(shapeAlignData, 'fixName', '1_fix.pdb', 'rotName', '1_rot.pdb')
 
-% or 
-
-shapeAlignData.save2pdb('folderPath', '/Users/yourUserName/Desktop')
 ```
 
   
@@ -399,14 +398,165 @@ inputStruct.GridRes = 100;
 ZEAL('5mok', inputStruct)
 ```
 
-# ZEALbatch (parallel)
+# ZEAL batch-mode (parallel)
 ZEAL can be run in a batch mode using `ZEALbatch`, which takes a list of 
 structures (or "structure-1,structure-2" pairs) and returns ZCDs (or shape
 alignments) for all of them. The list can either be given as a text-file or 
 as a MATLAB cell array. 
 
+If multiple cores are available, ZEALbatch distributes 
+the list to independent ZEAL computations to achieve significant speed-ups. 
+
+
+ZEALbatch accepts the same settings as ZEAL does to change, for instnace, the expansion order,
+molecular shape representation or grid resolution. 
+
+## Input 
+Jobs to `ZEALbatch` can either be given as a text file or as
+a MATLAB cell array, both of which will be shown below.
+
+The following optional arguments can also be defined
+
+| 'option name' | expected value/type  | default value | description |
+|:--:|:--:|:--:|:--:|
+| 'parallel' | true/false | false | If true, then structures in input file are distributed to independent ZEAL computations using the number of cores set in`NumCores` |
+| 'NumCores' | integer | 5 | Numnber of cores to use for parallel computation |
+| 'PDBoutput' | true/false | false | If true, then PDB files are saved to `outputPath` with name <id in list>_<original_name>_ZEAL.pdb
+| 'OutputPath' | char | current directory | The path where PDB files should be saved to. |  
+
+addOptional(p, 'PDBoutput', default_PDBoutput);
+            addOptional(p, 'outputPath', default_outputPath);
+
+### Text file 
+
+#### Single mode
+
+```
+ZEALbatch('sample_data/fileList_singleMode.txt')
+```
+where each row in `fileList_singleMode.txt` specifies a PDB (or CIF) file
+or a 4(+1) letter PDB ID code (+chain ID code):
+
+```
+$ cat fileList_singleMode.txt 
+
+sample_data/highTMset/1_2JERA_3H7CX/2JERA.pdb
+sample_data/highTMset/1_2JERA_3H7CX/3H7CX.pdb
+sample_data/highTMset/2_2O90A_5F3MA/2O90A.pdb
+sample_data/highTMset/2_2O90A_5F3MA/5F3MA.pdb
+sample_data/highTMset/3_3KTIA_5C90A/3KTIA.pdb
+sample_data/highTMset/3_3KTIA_5C90A/5C90A.pdb
+sample_data/highTMset/4_3OP4A_2PNFA/3OP4A.pdb
+sample_data/highTMset/4_3OP4A_2PNFA/2PNFA.pdb
+sample_data/highTMset/5_3NRRA_6KP7A/3NRRA.pdb
+sample_data/highTMset/5_3NRRA_6KP7A/6KP7A.pdb
+5MOKA
+2HO1A
+
+```
+
+#### Cell array
+
+batchJob_singleMode = {'sample_data/highTMset/1_2JERA_3H7CX/2JERA.pdb','sample_data/highTMset/1_2JERA_3H7CX/3H7CX.pdb','5MOKA','2HO1A'}
+batchJob_alignMode = {{'sample_data/highTMset/1_2JERA_3H7CX/2JERA.pdb', 'sample_data/highTMset/1_2JERA_3H7CX/3H7CX.pdb'}, {'5MOKA','2HO1A'}};
+
+## Output
+The ZEALbatch object contains the properties
+
+- Batch: A structure containing names of structures (fixed and/or rotating) from the input file 
+- Results: A structure containing ZCDs (+ Scores) for the fixed (and rotating structures) in singleMode (and in alignMode)
 
 # Using the Python API
+Install the MATLAB Engine API for Python as described [here](https://www.mathworks.com/help/matlab/matlab_external/install-the-matlab-engine-for-python.html) 
 
+Start the API 
+
+```
+import matlab.engine
+eng = matlab.engine.start_matlab()
+```
+
+## Examples
+
+### Compute Zernike descriptors from a structure
+
+```
+shape_data_single = eng.ZEAL('5mok.pdb','fix_chainID', 'A')
+
+```
+`
+### Aligning two structures
+
+```
+shape_data_align = eng.ZEAL('5mok.pdb','rot', '2ho1.pdb')
+```
+
+### Save aligned structures
+
+The aligned structures can be saved to PDB-files using
+
+```
+eng.save2pdb(shape_data)
+```
+
+## Accessing the results and other object properties
+
+1) ZEAL get-methods (for shape descriptors and moments only)
+```
+    ZCDs = eng.getShapeDescriptors(shape_data_single)
+
+    ZCDs_fix = eng.getShapeDescriptors(shape_data_align,'fixed')
+    ZCDs_rot = eng.getShapeDescriptors(shape_data_align,'rotating')
+
+    ZCmoments = eng.getMoments(shape_data_single)
+    ZCmoments_fix = eng.getMoments(shape_data_single, 'fixed')
+    ZCmoments_rot = eng.getMoments(shape_data_single, 'rotating')
+
+```
+
+2) Dot-notation
+    All properties (fields) in the ZEAL object (such as the shape descriptors and moments) can be accessed directly using dot-notation after copying the python variable to the Matlab workspace
+
+```
+    eng.workspace["shape_data"] = shape_data
+
+    ZCDs_fix = eng.eval("shape_data.fixed.ZC.Descriptors")
+    ZCDs_rot = eng.eval("shape_data.rotating.ZC.Descriptors")
+```
+
+3) eng.getfield
+    An alternative (although a bit cumbersome) way is to use the getfield method in the API like so
+
+```
+    fixed = eng.getfield(zeal_shape_data, 'fixed')
+    ZC = eng.getfield(fixed, 'ZC')
+    Descriptors = eng.getfield(ZC, 'Descriptors')
+    print(Descriptors)
+```
+
+### NB: Memory leak
   
+The following usage of ZEAL will result in a memory leak
+
+```
+
+```
+
+The bug has been traced to the handle class when using the API. Mathworks has been notified 
+about this and will communicate when this bug is resolved. Use ´ZEALbatch´ (see below) instead for multiple jobs using parallel computation 
+
+## ZEALbatch
+Input structures can be given to ZEALbatch as a Python list (ZEAL singleMode) or as a list of lists (ZEAL alignMode)
+
+```
+# batchList_alignMode = [["S11","S12"],["S21","S22"],["S31","S32"]]
+# batchList_singleMode = ["S1","S2","S3","S4","S5",S6"]
+    
+batchList_alignMode = [["sample_data/highTMset/1_2JERA_3H7CX/2JERA.pdb", "sample_data/highTMset/1_2JERA_3H7CX/3H7CX.pdb"],["sample_data/highTMset/2_2O90A_5F3MA/2O90A.pdb", "sample_data/highTMset/2_2O90A_5F3MA/5F3MA.pdb"],["3KTIA","5C90A"]]
+
+shape_batch = eng.ZEALbatch("batchList_alignMode")   
+
+```
+
+
 
