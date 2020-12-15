@@ -108,6 +108,12 @@ classdef ZEALbatch
                 
                 obj.pool = gcp;
                 
+                if obj.pool.NumWorkers ~= numCores
+                    fprintf('\n Restarting parallel pool to change number of cores to allocate\n');
+                    delete(obj.pool)
+                    parpool(numCores)
+                end
+                
             end
             
             % Get options for ZEAL, both default and any supplied in this constructor
