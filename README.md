@@ -336,7 +336,7 @@ save2pdb(shapeAlignData, 'fixName', '1_fix.pdb', 'rotName', '1_rot.pdb')
 
 
 
-The parameters listed below are set by default, but can be changed (described in \hyperref{H_56E64AE2}{Changing default parameters}). 
+The parameters listed below are set by default, but can be changed (described in [Changing default parameters](##changing-default-parameters)). 
 
 ### Shape 
 |parameter|type|default value|expected values|description|
@@ -453,8 +453,12 @@ sample_data/highTMset/5_3NRRA_6KP7A/6KP7A.pdb
 
 #### Cell array
 
+```
 batchJob_singleMode = {'sample_data/highTMset/1_2JERA_3H7CX/2JERA.pdb','sample_data/highTMset/1_2JERA_3H7CX/3H7CX.pdb','5MOKA','2HO1A'}
+
 batchJob_alignMode = {{'sample_data/highTMset/1_2JERA_3H7CX/2JERA.pdb', 'sample_data/highTMset/1_2JERA_3H7CX/3H7CX.pdb'}, {'5MOKA','2HO1A'}};
+
+```
 
 ## Output
 The ZEALbatch object contains the properties
