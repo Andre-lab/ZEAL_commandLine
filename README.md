@@ -6,9 +6,8 @@ available for download from github link XXXX.  For details on the method itself,
 see the publication [publication](https://academic.oup.com/bioinformatics):
 
 
-
-
         F. Ljung and I. André, ZEAL: Protein structure alignment based on shape similarity, *Bioinformatics* XX (2020)
+
 
 # Table of contents 
 - [Requirements](#requirements)
@@ -30,8 +29,8 @@ ZEAL depends on the following classes
    -  **ZC.m**                 Handles computation of Zernike-Canterakis moments and shape reconstruction 
    -  **ChiCoeffs.m**     Handles loading of pre-computed (object-independent) Chi-coefficients from .mat-files
 
-## Toolboxes
 
+## Toolboxes
 
 ZEAL uses functions from these toolboxes which have to be installed (included in [MATLAB Runtime](https://www.mathworks.com/products/compiler/matlab-runtime.html) if ZEAL run as standalone program)
 
@@ -54,7 +53,6 @@ ZEAL uses functions from these toolboxes which have to be installed (included in
   
 # Input
 
-
 ZEAL can be run in two modes depending on if one or two protein structures 
 are given as input. Protein structrues can either be given as files 
 (`'filename.pdb'` or ` `'`filepath/filename.pdb'` if not in same directory) 
@@ -65,8 +63,6 @@ structure (first model if several exist) is used, excluding hydrogen atoms
 and any heteroatoms. If any alternate atom locations are defined, all states  
 are selected. See the section \hyperref{H_56E64AE2}{Changing 
 default parameters} to change what structure data should be used in the analysis.  
-
-
   
 
 
@@ -102,8 +98,6 @@ Running ZEAL in single mode
  Computing ZC moments for fixed structure
 ```
 
-  
-
 
 **Align mode** Adding a second structure with parameter `'rot'` will start 
 the shape alignment search in ZEAL where the second structure 
@@ -134,7 +128,7 @@ Running ZEAL in Align mode
 	Stopping after 300 function evaluations
 
  ----------------------------------------------------------------------------
- Current best score      Euler (zyz)         iteration       time (s) 
+    Best score      Euler (zyz)         iteration       time (s) 
  ----------------------------------------------------------------------------
 	 0.31 		 0.00 0.00 0.00 	 0 		  0.2
 	 0.51 		 3.14 1.57 3.14 	 1 		  0.4
@@ -559,7 +553,9 @@ Input structures can be given to ZEALbatch as a Python list (ZEAL singleMode) or
     
 batchList_alignMode = [["sample_data/highTMset/1_2JERA_3H7CX/2JERA.pdb", "sample_data/highTMset/1_2JERA_3H7CX/3H7CX.pdb"],["sample_data/highTMset/2_2O90A_5F3MA/2O90A.pdb", "sample_data/highTMset/2_2O90A_5F3MA/5F3MA.pdb"],["3KTIA","5C90A"]]
 
-shape_batch = eng.ZEALbatch("batchList_alignMode")   
+shape_batch = eng.ZEALbatch("batchList_alignMode")  
+
+batchList_singleMode = ["sample_data/highTMset/1_2JERA_3H7CX/2JERA.pdb","sample_data/highTMset/1_2JERA_3H7CX/3H7CX.pdb","sample_data/highTMset/2_2O90A_5F3MA/2O90A.pdb","sample_data/highTMset/2_2O90A_5F3MA/5F3MA.pdb","sample_data/highTMset/3_3KTIA_5C90A/3KTIA.pdb","sample_data/highTMset/3_3KTIA_5C90A/5C90A.pdb","sample_data/highTMset/4_3OP4A_2PNFA/3OP4A.pdb","sample_data/highTMset/4_3OP4A_2PNFA/2PNFA.pdb","sample_data/highTMset/5_3NRRA_6KP7A/3NRRA.pdb","sample_data/highTMset/5_3NRRA_6KP7A/6KP7A.pdb"]
 
 ```
 
