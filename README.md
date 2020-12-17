@@ -14,7 +14,7 @@ see the publication [publication](https://academic.oup.com/bioinformatics):
 - [Input](#input)
 - [Output](#output)
 - [Optional input](#optional-input)
-- [ZEAL batch-mode (parallel)](#zeal-batch-(parallel))
+- [ZEAL batch-mode (parallel)](#zeal-batch-mode-(parallel))
 - [Using the Python API](#using-the-python-api)
 
 # Requirements
@@ -418,8 +418,10 @@ The following optional arguments can also be defined
 | 'PDBoutput' | true/false | false | If true, then PDB files are saved to `outputPath` with name <id in list>_<original_name>_ZEAL.pdb
 | 'OutputPath' | char | current directory | The path where PDB files should be saved to. |  
 
+
 addOptional(p, 'PDBoutput', default_PDBoutput);
             addOptional(p, 'outputPath', default_outputPath);
+
 
 ### Text file 
 
@@ -496,6 +498,7 @@ eng.save2pdb(shape_data)
 ## Accessing the results and other object properties
 
 1) **ZEAL get-methods** (for shape descriptors and moments only)
+
 ```
     ZCDs = eng.getShapeDescriptors(shape_data_single)
 
@@ -541,11 +544,13 @@ for i in range(1,100):
     shape_data = eng.ZEAL('sample_data/5mok.pdb','fix_chainID', 'A’)
 ```
 
+
 The bug has been traced to the handle class when using the API. Mathworks has verified the bug notified 
- will communicate when it is resolved. Use ´ZEALbatch´ (see below) instead for multiple jobs using parallel computation 
+ will communicate when it is resolved. Use `ZEALbatch` (see below) instead for multiple jobs using parallel computation 
 
 ## ZEALbatch
 Input structures can be given to ZEALbatch as a Python list (ZEAL singleMode) or as a list of lists (ZEAL alignMode)
+
 
 ```
 # batchList_alignMode = [["S11","S12"],["S21","S22"],["S31","S32"]]
