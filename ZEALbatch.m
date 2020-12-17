@@ -325,14 +325,15 @@ classdef ZEALbatch
                 fprintf('\n                         %3.2f s / structure', obj.Results.ComputationTime/N);
             end
             
+            fprintf('\n')
+            
             %             function [] = updateParStatus(~)
             %
             %                 fprintf('\n Progress: %2.2f', parCount/obj.Batch.N);
             %                 parCount = parCount +1;
             %
             %             end
-            
-            
+                        
             
         end
         
