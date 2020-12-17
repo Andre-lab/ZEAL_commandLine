@@ -14,7 +14,7 @@ see the publication [publication](https://academic.oup.com/bioinformatics):
 - [Input](#input)
 - [Output](#output)
 - [Optional input](#optional-input)
-- [ZEAL batch mode (parallel)](#zeal-batch-mode-(parallel)
+- [ZEAL batch mode (parallel)](#zeal-batch-mode-(parallel))
 - [Using the Python API](#using-the-python-api)
 
 # Requirements
