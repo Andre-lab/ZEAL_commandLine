@@ -87,14 +87,14 @@ classdef ZEALbatch
             
             % defaults
             default_Parallel = false;
-            defualt_NumCores = 4;
+            default_NumCores = 4;
             default_PDBoutput = false;
             default_OutputPath = pwd;
             p = inputParser;
             p.KeepUnmatched = true;
             
             addOptional(p, 'Parallel', default_Parallel);
-            addOptional(p, 'NumCores', defualt_NumCores);
+            addOptional(p, 'NumCores', default_NumCores);
             addOptional(p, 'PDBoutput', default_PDBoutput);
             addOptional(p, 'OutputPath', default_OutputPath);
             
@@ -332,6 +332,19 @@ classdef ZEALbatch
             %
             %             end
             
+            
+            
+        end
+        
+        function status = closeParPool(obj)
+           
+            if ~isempty(obj.pool)
+                
+               delete(obj.pool) 
+               
+            end
+                 
+            status = obj.pool;
         end
         
     end
