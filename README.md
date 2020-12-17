@@ -14,7 +14,7 @@ see the publication [publication](https://academic.oup.com/bioinformatics):
 - [Input](#input)
 - [Output](#output)
 - [Optional input](#optional-input)
-- [ZEAL batch-mode (parallel)](#zeal-batch-mode-(parallel))
+- [ZEAL batch mode (parallel)](#zeal-batch-mode-(parallel)
 - [Using the Python API](#using-the-python-api)
 
 # Requirements
@@ -392,7 +392,7 @@ inputStruct.GridRes = 100;
 ZEAL('5mok', inputStruct)
 ```
 
-# ZEAL batch-mode (parallel)
+# ZEAL batch mode (parallel)
 ZEAL can be run in a batch mode using `ZEALbatch`, which takes a list of 
 structures (or "structure-1,structure-2" pairs) and returns ZCDs (or shape
 alignments) for all of them. The list can either be given as a text-file or 
