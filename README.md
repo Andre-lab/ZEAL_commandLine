@@ -128,7 +128,7 @@ Running ZEAL in Align mode
 	Stopping after 300 function evaluations
 
  ----------------------------------------------------------------------------
-    Best score      Euler (zyz)         iteration       time (s) 
+        Best score      Euler (zyz)         iteration       time (s) 
  ----------------------------------------------------------------------------
 	 0.31 		 0.00 0.00 0.00 	 0 		  0.2
 	 0.51 		 3.14 1.57 3.14 	 1 		  0.4
