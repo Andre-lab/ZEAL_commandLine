@@ -128,7 +128,7 @@ Running ZEAL in Align mode
 	Stopping after 300 function evaluations
 
  ----------------------------------------------------------------------------
-        Best score      Euler (zyz)         iteration       time (s) 
+        Best score         Euler (zyz)      iteration          time (s) 
  ----------------------------------------------------------------------------
 	 0.31 		 0.00 0.00 0.00 	 0 		  0.2
 	 0.51 		 3.14 1.57 3.14 	 1 		  0.4
@@ -341,31 +341,31 @@ The parameters listed below are set by default, but can be changed (described in
 ### Shape 
 |parameter|type|default value|expected values|description|
 |:--:|:--:|:--:|:--:|:--:|
-|'Order' | 'integer' | 20 | '>0' | The maximum expansion order of ZC moments.|
-|'ChiCoeffPath' | 'char' | [pwd '/chi_coefficients'] | 'folder path' | Path to folder with pre-computed chi coefficients for order N with name  `chiCoeffs_order_N.mat`. Use ZC.computeChiCoeffs to compute them.|
-|'GridRes' | 'integer'|64|'>0' | The side length of the cubic grid.|
-|'Shape' | 'char'|'MS'| 'MS'/ 'SAS'/ 'vdw'/ 'electron_density' | The type of molecular shape function.|
-|'ProbeRadius' | 'double'|1.4000| '>=0' | The radius of the probe in Å used for the surface computations.|
-|'SmearFactor' | 'double'|0.3000| '>0, <1' | 'Fraction of grid to smear out atoms over when generating electron density.|
-|'ShellThickness' | 'integer'|2|' >0' | Thickness of surfaces (shells) in grid units.|
+|'Order' | integer | 20 | >0 | The maximum expansion order of ZC moments.|
+|'ChiCoeffPath' | char | [pwd '/chi_coefficients'] | 'folder path' | Path to folder with pre-computed chi coefficients for order N with name  `chiCoeffs_order_N.mat`. Use ZC.computeChiCoeffs to compute them.|
+|'GridRes' | integer| 64 | >0 | The side length of the cubic grid.|
+|'Shape' | char | 'MS' | 'MS'/ 'SAS'/ 'vdw'/ 'electron_density' | The type of molecular shape function.|
+|'ProbeRadius' | double | 1.4000 | >=0 | The radius of the probe in Å used for the surface computations.|
+|'SmearFactor' | double | 0.3000 | >0, <1 | 'Fraction of grid to smear out atoms over when generating electron density.|
+|'ShellThickness' | integer| 2 | >0 | Thickness of surfaces (shells) in grid units.|
 
 ### Search
 |parameter|type|default value|expected values|description|
 |:--:|:--:|:--:|:--:|:--:|
-|'FunEvals' | 'integer' | 300 | '>0'| Number of ZEAL score evaluations until search stops..|
-|'AlignLater' | 'logical' | 0 | 'true/false'| If false then ZEAL will not automatically align upon object construction. Manually start alignment using `shapeAlign(ZEALobject)` or `ZEALobject.shapeAlign()` .|
+|'FunEvals' | integer | 300 |  >0 | Number of ZEAL score evaluations until search stops..|
+|'AlignLater' | logical | false (0) | true/false (1/0)| If false then ZEAL will not automatically align upon object construction. Manually start alignment using `shapeAlign(ZEALobject)` or `ZEALobject.shapeAlign()` .|
 
 ### PDB/CIF data
 |parameter|type|default value|expected values|description|
 |:--:|:--:|:--:|:--:|:--:|
-|'fix_includeHetatoms | 'logical' |0| 'true/false' | Flag to indicate if HETATM records should be included in fixed structure.|
-|'rot_includeHetatoms | 'logical' |0| 'true/false' | "---" in rotating structure.|
-|'fix_includeHatoms' | 'logical' |0| 'true/false' | Flag to indicate if Hydrogen atoms should be included (if exists) in fixed structure..|
-|'rot_includeHatoms' | 'logical' |0| 'true/false' | "---" in rotating structure.|
-|'fix_chainID'|'char' | 'all' | 'all' or 1 letter' | The chain ID that should be selected (''all'' = all chains) in fixed structure.|
-|'rot_chainID'|'char' | 'all' | 'all' or 1 letter' | "---" in rotating structure.|
-|'fix_altLocID' |  'integer' | 'all' | 'all' or 1 letter' | The ID of any atom altlocs that should be selected in fixed structure. Use ''all'' to include all altlocs. |
-|'rot_altLocID' |  'integer' | 'all' | 'all' or 1 letter' | "---" in rotating structure. |
+|'fix_includeHetatoms | logical | false (0) | true/false (1/0) | Flag to indicate if HETATM records should be included in fixed structure.|
+|'rot_includeHetatoms | logical | false (0) | true/false (1/0) | "---" in rotating structure.|
+|'fix_includeHatoms' | logical | false (0) | true/false (1/0) | Flag to indicate if Hydrogen atoms should be included (if exists) in fixed structure..|
+|'rot_includeHatoms' | logical | false (0) | true/false (1/0) | "---" in rotating structure.|
+|'fix_chainID'| char | 'all' | 'all' or 1 letter | The chain ID that should be selected (''all'' = all chains) in fixed structure.|
+|'rot_chainID'| char | 'all' | 'all' or 1 letter | "---" in rotating structure.|
+|'fix_altLocID' |  integer | 'all' | 'all' or 1 letter | The ID of any atom altlocs that should be selected in fixed structure. Use ''all'' to include all altlocs. |
+|'rot_altLocID' |  integer | 'all' | 'all' or 1 letter | "---" in rotating structure. |
   
 
 
