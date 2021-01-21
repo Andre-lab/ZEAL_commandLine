@@ -125,7 +125,7 @@ classdef PDB < handle
                 % Check if file is PDB or CIF
                 
                 switch lower(obj.Source.Ext)
-                    case '.pdb'
+                    case {'.pdb', '.ent'}
                         obj.AllData = PDB.readPDBfile(fullfile(obj.Source.Path, [obj.Source.Name obj.Source.Ext] ));
                     case '.cif'
                         obj.AllData = PDB.readCIFdata(fullfile(obj.Source.Path, [obj.Source.Name obj.Source.Ext] ));
