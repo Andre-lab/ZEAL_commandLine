@@ -130,6 +130,9 @@ classdef ZEALbatch
             
             fix_descriptors = zeros(obj.Batch.N, nInvariants);
             rot_descriptors = zeros(obj.Batch.N, nInvariants);
+            fix_Rg = zeros(obj.Batch.N, 1);
+            rot_Rg = zeros(obj.Batch.N, 1);
+            
             score = zeros(obj.Batch.N, 1);
             
             % set non_default options for ZEAL
@@ -173,6 +176,9 @@ classdef ZEALbatch
                                 rot_descriptors(i,:) = shape_i.fixed.ZC.Descriptors;
                                 score(i) = shape_i.Score;
                                 
+                                fix_Rg(i) = shape_i.fixed.Rg;
+                                rot_Rg(i) = shape_i.rotating.Rg;
+                                
                                 if PDBoutput
                                     [~, name, ~] = fileparts(fix{i});
                                     fix_savename = sprintf('%d_%s_ZEAL.pdb', i, name);
@@ -209,6 +215,9 @@ classdef ZEALbatch
                                 rot_descriptors(i,:) = shape_i.fixed.ZC.Descriptors;
                                 score(i) = shape_i.Score;
                                 
+                                fix_Rg(i) = shape_i.fixed.Rg;
+                                rot_Rg(i) = shape_i.rotating.Rg;
+                                
                                 if PDBoutput
                                     [~, name, ~] = fileparts(fix{i});
                                     fix_savename = sprintf('%d_%s_ZEAL.pdb', i, name);
@@ -233,6 +242,9 @@ classdef ZEALbatch
                     obj.Results.Rotating.Descriptors = rot_descriptors;
                     obj.Results.Score = score;
                     
+                    obj.Results.Fixed.Rg = fix_Rg;
+                    obj.Results.Rotating.Rg = rot_Rg;
+                    
                 else % SINGLE MODE
                     
                     fix = obj.Batch.Fixed;
@@ -252,6 +264,8 @@ classdef ZEALbatch
                                 if ~isempty(fix{i})
                                     shape_i = ZEAL(fix{i}, zealOptions);
                                     fix_descriptors(i,:) = shape_i.fixed.ZC.Descriptors;
+                                    fix_Rg(i) = shape_i.fixed.Rg;
+
                                 else
                                     warning('No structure specified (input number %d)', i);
                                 end
@@ -272,6 +286,7 @@ classdef ZEALbatch
                         end
                         
                         obj.Results.Fixed.Descriptors = fix_descriptors;
+                        obj.Results.Fixed.Rg = fix_Rg;
                         
                     else % parOp false
                         
@@ -284,6 +299,8 @@ classdef ZEALbatch
                                 if ~isempty(fix{i})
                                     shape_i = ZEAL(fix{i}, zealOptions);
                                     fix_descriptors(i,:) = shape_i.fixed.ZC.Descriptors;
+                                    fix_Rg(i) = shape_i.fixed.Rg;
+                                    
                                 else
                                     warning('No structure specified (input number %d)', i);
                                 end
@@ -303,7 +320,7 @@ classdef ZEALbatch
                         
                         % Gather (adapted for parfor)
                         obj.Results.Fixed.Descriptors = fix_descriptors;
-                        
+                        obj.Results.Fixed.Rg = fix_Rg;
                     end
                     
                 end
