@@ -298,6 +298,8 @@ classdef ZEAL < handle
                 end
                 obj.fixed.PDB = PDB(obj.fixed.Name, obj.fixed.Selection);
                 
+                obj.fixed.Rg = computeRadiusOfGyration(obj, obj.fixed.PDB.Data);
+                
                 if  obj.AlignMode
                     % Set PDB parameters for rotating if align mode activated
                     obj.rotating.Name = p.Results.rot;
@@ -311,6 +313,8 @@ classdef ZEAL < handle
                     end
                     
                     obj.rotating.PDB = PDB(obj.rotating.Name, obj.rotating.Selection);
+
+                    obj.rotating.Rg = computeRadiusOfGyration(obj, obj.rotating.PDB.Data);
                     
                 end
                 
@@ -914,6 +918,18 @@ classdef ZEAL < handle
                     ZCmoments = obj.rotating.ZC.Moments.Values;
             end
             
+        end
+        
+        function Rg = computeRadiusOfGyration(~,pdb_data)
+            % Compute radius of gyration
+            % Input the data field from the PDB class
+            
+            xyz = [pdb_data.X pdb_data.Y pdb_data.Z];
+            natoms = size(xyz, 1);
+            COM = mean(xyz);
+            xyz_com = xyz-ones(natoms,1)*COM;
+            
+            Rg = sqrt(mean(sum(xyz_com.^2,2)));
         end
         
     end
