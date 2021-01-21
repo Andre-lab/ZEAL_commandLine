@@ -31,26 +31,38 @@ classdef ChiCoeffs < handle
                 nQueries = nQueries + 1;
             end
             
+            % get path from where this class is called 
+            classFilePath = mfilename('fullpath');
+            
             default_Order = 20;
-            default_ChiCoeffFolder = fullfile(pwd,'chi_coefficients');
+            default_ChiCoeffFolder = fullfile(classFilePath,'chi_coefficients');
             
             p = inputParser;
             
             addOptional(p, 'Order', default_Order);
-            addOptional(p, 'ChiCoeffFolder', default_ChiCoeffFolder);
+            addOptional(p, 'ChiCoeffPath', default_ChiCoeffFolder);
             
             parse(p, varargin{:});
             
             obj.Order = p.Results.Order;
             
-            ChiCoeffpath = fullfile(p.Results.ChiCoeffFolder, sprintf('chiCoeffs_order_%d.mat', obj.Order));
+            ChiCoeffFileName = sprintf('chiCoeffs_order_%d.mat', obj.Order);
+            ChiCoeffFilePath = fullfile(p.Results.ChiCoeffPath, ChiCoeffFileName);
             
             fprintf('\n ChiCoeffs class queried %d time(s)\n\t Loading Chi coefficients for order %1.0f', nQueries, obj.Order);
             
-            data = load(ChiCoeffpath,'chi_coeff_cell','chi_nlm_rst_cell');
-            
-            obj.Values = data.chi_coeff_cell;
-            obj.Indices = data.chi_nlm_rst_cell;
+            try
+                data = load(ChiCoeffFilePath,'chi_coeff_cell','chi_nlm_rst_cell');
+                
+                obj.Values = data.chi_coeff_cell;
+                obj.Indices = data.chi_nlm_rst_cell;
+                
+            catch ME
+                warning(ME.message);
+                
+                obj.Values = NaN;
+                obj.Indices = NaN;
+            end
 
         end
         
