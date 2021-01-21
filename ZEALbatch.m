@@ -148,6 +148,7 @@ classdef ZEALbatch
             try
                 
                 N = obj.Batch.N;
+                errors = 0;
                 
                 if obj.AlignMode % ALIGN MODE
                     
@@ -194,6 +195,7 @@ classdef ZEALbatch
                                 
                             catch ME
                                 warning(ME.message)
+                                errors = errors + 1;
                             end
                             
                         end
@@ -231,6 +233,7 @@ classdef ZEALbatch
                                 
                             catch ME
                                 warning(ME.message)
+                                errors = errors + 1;
                             end
                             
                         end
@@ -281,6 +284,7 @@ classdef ZEALbatch
                                 
                             catch ME
                                 warning(ME.message)
+                                errors = errors + 1;
                             end
                                                                                     
                         end
@@ -314,6 +318,7 @@ classdef ZEALbatch
                                 
                             catch ME
                                 warning(ME.message)
+                                errors = errors + 1;
                             end
                             
                         end
@@ -331,6 +336,7 @@ classdef ZEALbatch
                 
             end
             
+            obj.Results.Errors = errors;
             obj.Results.ComputationTime = toc(startTime);
             
             
