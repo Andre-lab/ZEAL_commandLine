@@ -32,10 +32,10 @@ classdef ChiCoeffs < handle
             end
             
             % get path from where this class is called 
-            classFilePath = mfilename('fullpath');
+            classFileFolderPath = fileparts(mfilename('fullpath'));
             
             default_Order = 20;
-            default_ChiCoeffFolder = fullfile(classFilePath,'chi_coefficients');
+            default_ChiCoeffFolder = fullfile(classFileFolderPath,'chi_coefficients');
             
             p = inputParser;
             
