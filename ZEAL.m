@@ -748,7 +748,6 @@ classdef ZEAL < handle
             %
             % <fileSavePath>  : char
             % path to the file that we create and write data data
-            %
             
             
             % get file name from path
@@ -866,14 +865,18 @@ classdef ZEAL < handle
             % method to merge two ZEAL objects in "single mode" to a new
             % object in "align mode", i.e. a fixed and rotating structure
             % that can be aligned. The shape similarity (Euclidean ZCD
-            % distance) is computed upon creation.
+            % distance) is after the merge. 
             %
-            % Example
+            % Example:
+            % Create two ZEAL objects in single mode:
             % a = ZEAL('1stmA');
             % b = ZEAL('2lisA')
+            % 
+            % Merge them to a ZEAL object in align mode:
             % ab = mergeZEAL(a,b)
             %
-            % Perform alignment
+            % Now you can do shape alignment of them using the shapeAlign
+            % command: 
             % shapeAlign(ab)
             
             obj = fixObj;
@@ -921,8 +924,8 @@ classdef ZEAL < handle
         end
         
         function Rg = computeRadiusOfGyration(~,pdb_data)
-            % Compute radius of gyration
-            % Input the data field from the PDB class
+            % Compute radius of gyration (Rg)
+            % Input: the data field from the PDB class
             
             xyz = [pdb_data.X pdb_data.Y pdb_data.Z];
             natoms = size(xyz, 1);
@@ -942,7 +945,7 @@ classdef ZEAL < handle
             % rotation parameterized by the Euler angles x and rotation
             % order (Euler convention) 'zyz'
             
-            % lambdas for Euler angles to rotation matrix
+            % Functions for Euler angles to rotation matrix
             Ry = @(theta) [cos(theta) 0 -sin(theta); 0 1 0; sin(theta) 0 cos(theta)];
             Rz = @(theta) [cos(theta) sin(theta) 0; -sin(theta) cos(theta) 0; 0 0 1];
             
@@ -954,8 +957,7 @@ classdef ZEAL < handle
             % Write PDB structure data to file (id = fid). Structure format is that from PDB class.
             % Helper function to export2Pdb method in case we want to write
             % multiple models to same file
-            
-            
+                        
             nAtoms = length(model.atomNum);
             
             % output data
