@@ -9,7 +9,7 @@ classdef ZEAL < handle
     %   shape similarity", Bioinformatics (2020)
     %
     %
-    % Last modified 2020-10-22
+    % Last modified 2021-01
     %
     % TODO: Add event listeners so that ZEAL responds automatically when
     % Settings property is chanegd -> recompute shapeFunction or ZC moments
@@ -35,7 +35,7 @@ classdef ZEAL < handle
         
         Logging
         AlignLater % true/false (false by default)
-        InputParserOnly % true/false -> 
+        InputParserOnly % true/false ->
         % if true then ZEAL will not start aligning automatically
     end
     
@@ -313,7 +313,7 @@ classdef ZEAL < handle
                     end
                     
                     obj.rotating.PDB = PDB(obj.rotating.Name, obj.rotating.Selection);
-
+                    
                     obj.rotating.Rg = computeRadiusOfGyration(obj, obj.rotating.PDB.Data);
                     
                 end
@@ -599,7 +599,7 @@ classdef ZEAL < handle
                 defaultStructure = 'fixed';
                 defaultRotName = '';
             end
-          
+            
             % do option parsing
             p = inputParser;
             
@@ -830,6 +830,7 @@ classdef ZEAL < handle
             nRecords = length(pdbData.atomNum);
             
             checkIfEmpty = @(x) isempty(x);
+            
             % occupancy
             if isempty(pdbData.occupancy)
                 pdbData.occupancy = zeros(nRecords,1);
@@ -865,18 +866,18 @@ classdef ZEAL < handle
             % method to merge two ZEAL objects in "single mode" to a new
             % object in "align mode", i.e. a fixed and rotating structure
             % that can be aligned. The shape similarity (Euclidean ZCD
-            % distance) is after the merge. 
+            % distance) is after the merge.
             %
             % Example:
             % Create two ZEAL objects in single mode:
             % a = ZEAL('1stmA');
             % b = ZEAL('2lisA')
-            % 
+            %
             % Merge them to a ZEAL object in align mode:
             % ab = mergeZEAL(a,b)
             %
             % Now you can do shape alignment of them using the shapeAlign
-            % command: 
+            % command:
             % shapeAlign(ab)
             
             obj = fixObj;
@@ -953,31 +954,184 @@ classdef ZEAL < handle
             
         end
         
-        function writeModel(fid, model)
-            % Write PDB structure data to file (id = fid). Structure format is that from PDB class.
-            % Helper function to export2Pdb method in case we want to write
-            % multiple models to same file
-                        
-            nAtoms = length(model.atomNum);
+        %         function writeModel(fid, model)
+        %             % Write PDB structure data to file (id = fid). Structure format is that from PDB class.
+        %             % Helper function to export2Pdb method in case we want to write
+        %             % multiple models to same file
+        %
+        %             nAtoms = length(model.atomNum);
+        %
+        %             % output data
+        %             try
+        %                 for n = 1:nAtoms
+        %
+        %                     % fix atomName spacing
+        %                     model.atomName(n) = {sprintf('%-3s',cell2mat(model.atomName(n)))};
+        %
+        %                     % standard PDB output line
+        %                     fprintf( fid, '%-6s%5u%5s%1.1s%3s %1.1s%4i%12.3f%8.3f%8.3f%6.2f%6.2f%12s%2s\n', ...
+        %                         cell2mat(model.recordName(n)), model.atomNum(n), cell2mat(model.atomName(n)), ...
+        %                         cell2mat(model.altLoc(n)), cell2mat(model.resName(n)), cell2mat(model.chainID(n)), ...
+        %                         model.resNum(n), model.X(n), model.Y(n), model.Z(n), model.occupancy(n), model.betaFactor(n), ...
+        %                         cell2mat(model.element(n)), cell2mat(model.charge(n)));
+        %                 end
+        %
+        %             catch
+        %                 error('Failed to write PDB records.');
+        %             end
+        %
+        %         end
+        
+        function writeModel(fid, pdbData)
+            
+            % coordinate data is required! Checking XYZ input
+            if ~isfield(pdbData, 'X') || ~isfield(pdbData, 'Y') || ~isfield(pdbData, 'Z')
+                error('Field(s) for XYZ coordinates not found.');
+            end
+            X = pdbData.X;
+            Y = pdbData.Y;
+            Z = pdbData.Z;
+            if length(X) ~= length(Y) || length(X) ~= length(Z)
+                error('XYZ coordinates not of equal dimension.');
+            end
+            
+            % review optional data inputs
+            % in case optional data  not given, fill in blanks
+            if ~isfield(pdbData, 'outfile')
+                pdbData.outfile = 'mat2PDB.pdb';
+            end
+            if ~isfield(pdbData, 'recordName')
+                pdbData.recordName = cell(1,length(X));
+                pdbData.recordName(1:end) = {'ATOM'};
+            end
+            if ~isfield(pdbData, 'atomNum')
+                pdbData.atomNum = 1:length(X);
+            end
+            if ~isfield(pdbData, 'atomName')
+                pdbData.atomName = cell(1,length(X));
+                pdbData.atomName(1:end) = {'OW'};
+            end
+            if ~isfield(pdbData, 'altLoc')
+                pdbData.altLoc = cell(1,length(X));
+                pdbData.altLoc(1:end) = {' '};
+            end
+            if ~isfield(pdbData, 'resName')
+                pdbData.resName = cell(1,length(X));
+                pdbData.resName(1:end) = {'SOL'};
+            end
+            if ~isfield(pdbData, 'chainID')
+                pdbData.chainID = cell(1,length(X));
+                pdbData.chainID(1:end) = {'A'};
+            end
+            if ~isfield(pdbData, 'resNum')
+                pdbData.resNum = 1:length(X);
+            end
+            if ~isfield(pdbData, 'occupancy')
+                pdbData.occupancy = ones(1,length(X));
+            end
+            if ~isfield(pdbData, 'betaFactor')
+                pdbData.betaFactor = zeros(1, length(X));
+            end
+            if ~isfield(pdbData, 'element')
+                pdbData.element = cell(1,length(X));
+                pdbData.element(1:end) = {'O'};
+            end
+            if ~isfield(pdbData, 'charge')
+                pdbData.charge = cell(1,length(X));
+                pdbData.charge(1:end) = {' '};
+            end
+            
+            recordName = pdbData.recordName;
+            atomNum    = pdbData.atomNum;
+            atomName   = pdbData.atomName;
+            altLoc     = pdbData.altLoc;
+            resName    = pdbData.resName;
+            chainID    = pdbData.chainID;
+            resNum     = abs(pdbData.resNum);
+            occupancy  = pdbData.occupancy;
+            betaFactor = pdbData.betaFactor;
+            element    = pdbData.element;
+            charge     = pdbData.charge;
+            
+            % remove faulty inputs
+            if length(recordName) ~= length(X)
+                warning('recordName input is not the correct length!\n\tignoring user input\n');
+                recordName = cell(1,length(X));
+                recordName(1:end) = {'ATOM'};
+            end
+            if length(atomNum) ~= length(X)
+                warning('atom serial number input is not the correct length!\n\tignoring user input\n');
+                atomNum = 1:length(X);
+            end
+            if length(atomName) ~= length(X)
+                warning('atom name input is not the correct length!\n\tignoring user input\n');
+                atomName = cell(1,length(X));
+                atomName(1:end) = {'OW'};
+            end
+            if length(altLoc) ~= length(X)
+                warning('alternate location input is not the correct length!\n\tignoring user input\n');
+                altLoc = cell(1,length(X));
+                altLoc(1:end) = {' '};
+            end
+            if length(resName) ~= length(X)
+                warning('residue name input is not the correct length!\n\tignoring user input\n');
+                resName = cell(1,length(X));
+                resName(1:end) = {'SOL'};
+            end
+            if length(chainID) ~= length(X)
+                warning('chain ID input is not the correct length!\n\tignoring user input\n');
+                chainID = cell(1,length(X));
+                chainID(1:end) = {'A'};
+            end
+            if length(resNum) ~= length(X)
+                warning('residue number input is not the correct length!\n\tignoring user input\n');
+                resNum = 1:length(X);
+            end
+            if length(occupancy) ~= length(X)
+                warning('occupancy input is not the correct length!\n\tignoring user input\n');
+                occupancy = ones(1,length(X));
+            end
+            if length(betaFactor) ~= length(X)
+                warning('beta factor input is not the correct length!\n\tignoring user input\n');
+                betaFactor = zeros(1, length(X));
+            end
+            if length(element) ~= length(X)
+                warning('element symbol input is not the correct length!\n\tignoring user input\n');
+                element = cell(1,length(X));
+                element(1:end) = {'O'};
+            end
+            if length(charge) ~= length(X)
+                warning('charge input is not the correct length!\n\tignoring user input\n');
+                charge = cell(1,length(X));
+                charge(1:end) = {' '};
+            end
+            
+            % fix atomName spacing
+            for n = 1:length(atomName)
+                atomName(n) = {sprintf('%-3s',cell2mat(atomName(n)))};
+            end
             
             % output data
-            try
-                for n = 1:nAtoms
-                    
-                    % fix atomName spacing
-                    model.atomName(n) = {sprintf('%-3s',cell2mat(model.atomName(n)))};
-                    
-                    % standard PDB output line
-                    fprintf( fid, '%-6s%5u%5s%1.1s%3s %1.1s%4i%12.3f%8.3f%8.3f%6.2f%6.2f%12s%2s\n', ...
-                        cell2mat(model.recordName(n)), model.atomNum(n), cell2mat(model.atomName(n)), ...
-                        cell2mat(model.altLoc(n)), cell2mat(model.resName(n)), cell2mat(model.chainID(n)), ...
-                        model.resNum(n), model.X(n), model.Y(n), model.Z(n), model.occupancy(n), model.betaFactor(n), ...
-                        cell2mat(model.element(n)), cell2mat(model.charge(n)));
+            for n = 1:length(atomNum)
+                
+                % standard PDB output line
+                fprintf( fid, '%-6s%5u%5s%1.1s%3s %1.1s%4u%12.3f%8.3f%8.3f%6.2f%6.2f%12s%2s\n', ...
+                    cell2mat(recordName(n)), atomNum(n), cell2mat(atomName(n)), ...
+                    cell2mat(altLoc(n)), cell2mat(resName(n)), cell2mat(chainID(n)), ...
+                    resNum(n), X(n), Y(n), Z(n), occupancy(n), betaFactor(n), ...
+                    cell2mat(element(n)), cell2mat(charge(n)));
+                
+                % output progress in terminal
+                if ~mod(n,400)
+                    fprintf('   %6.2f%%', 100*n / length(atomNum));
+                    if ~mod(n, 4000)
+                        fprintf('\n');
+                    end
                 end
                 
-            catch
-                error('Failed to write PDB records.');
             end
+            
+            
             
         end
         
