@@ -34,9 +34,9 @@ classdef ZEAL < handle
         % compute shape descriptors (1 shape defined)
         
         Logging
-        AlignLater % true/false (false by default)
+        AlignLater % true/false (false by default). If true then ZEAL will not start aligning automatically
         InputParserOnly % true/false ->
-        % if true then ZEAL will not start aligning automatically
+        
     end
     
     properties (Constant)
@@ -183,6 +183,8 @@ classdef ZEAL < handle
             default_AlignLater = false;
             default_inputParserOnly = false;
             
+            default_searchSaveFactor = 1.01;
+            
             default_rot = ''; % = no rotating structure ->  zeal computes shape descriptors for fixed only
             
             
@@ -218,6 +220,8 @@ classdef ZEAL < handle
             
             addOptional(p, 'LogLevel', default_LogOption, @(x) any(validatestring(x,expected_ShowLog)));
             
+            addOptional(p, 'SearchSaveFactor', default_searchSaveFactor);
+            
             % Parse and set defaults
             parse(p, fix, varargin{:});
             
@@ -244,6 +248,8 @@ classdef ZEAL < handle
             
             obj.Logging.Display = p.Results.LogLevel;
             obj.Settings.molShape.ShowLog = false;
+            
+            obj.Search.History.SearchSaveFactor = p.Results.SearchSaveFactor;
             
             switch obj.Logging.Display
                 case 'basic'
@@ -296,6 +302,7 @@ classdef ZEAL < handle
                 if obj.Logging.Level > 0
                     fprintf('\n - Importing fixed structure: %s', obj.fixed.Name);
                 end
+                
                 obj.fixed.PDB = PDB(obj.fixed.Name, obj.fixed.Selection);
                 
                 obj.fixed.Rg = computeRadiusOfGyration(obj, obj.fixed.PDB.Data);
@@ -369,7 +376,9 @@ classdef ZEAL < handle
                     end
                 end
                 
-                fprintf('\n');
+                if obj.Logging.Level > 0
+                    fprintf('\n');
+                end
                 
             end
             
@@ -474,7 +483,7 @@ classdef ZEAL < handle
                     
                     searchTime = toc(obj.Search.History.startTime);
                     
-                    if optimvalues.fval < (obj.Search.History.prev_val*1.01)
+                    if optimvalues.fval < (obj.Search.History.prev_val*obj.Search.History.SearchSaveFactor)
                         
                         obj.Search.History.prev_val = optimvalues.fval;
                         
