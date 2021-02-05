@@ -25,7 +25,7 @@ classdef molShape < handle
         AtomData % Nx6 list with col X,Y,Z, positional varaince, element code, vdw radii
         ShowLog % flag to turn on/off standard output (logging to console)
         FunctionData % the voxelized (i.e. mapped to a grid) surface (molecular, solvent-accessible surface, vdw or electron density)
-        PCAalign % flag to have atoms aligned using PCA: the greatest positional variation will be along the z-axis, then the y-axis, and the least variation along the x-axis
+        PCAalign % flag to have atoms aligned along their principal axes: the greatest positional variation will be along the z-axis, then the y-axis, and the least variation along the x-axis
     end
     
     methods
@@ -46,7 +46,7 @@ classdef molShape < handle
             % 'ShellThickness'  : integer (2)
             % 'ShowLog'         : true/false (false)
             % 'defaultPCAalign' : true/false (false)
-                % If true: atoms coordinates will be rotated so that the greatest positional variation will be along the z-axis, then the y-axis, and the least variation along the x-axis 
+                % If true: atoms are aligned along their principal axes: coordinates will be rotated so that the greatest positional variation will be along the z-axis, then the y-axis, and the least variation along the x-axis 
             
             expectedShapes = {'SAS','MS','vdw','electron_density'};
             defaultShape = 'MS';
@@ -96,6 +96,9 @@ classdef molShape < handle
             obj.AtomData = molShape.processPDBdata(pdbStruct);
             
             if obj.PCAalign 
+                if obj.ShowLog
+                    fprintf('\n\t Pre-aligning atom coordinates along their principal axes.');
+                end
                 obj.AtomData = molShape.PCAalignAtoms(obj.AtomData);
             end
             
