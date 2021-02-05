@@ -10,7 +10,7 @@ classdef molShape < handle
     %
     % filip.persson@gmail.com
     %
-    % Last modified 2020-10-22
+    % Last modified 2021-02-05
     %
     % TODO: Unit test 
     %
@@ -25,6 +25,7 @@ classdef molShape < handle
         AtomData % Nx6 list with col X,Y,Z, positional varaince, element code, vdw radii
         ShowLog % flag to turn on/off standard output (logging to console)
         FunctionData % the voxelized (i.e. mapped to a grid) surface (molecular, solvent-accessible surface, vdw or electron density)
+        PCAalign % flag to have atoms aligned using PCA: the greatest positional variation will be along the z-axis, then the y-axis, and the least variation along the x-axis
     end
     
     methods
@@ -44,7 +45,8 @@ classdef molShape < handle
             % 'SmearFactor'     : double (0.3)
             % 'ShellThickness'  : integer (2)
             % 'ShowLog'         : true/false (false)
-            % 
+            % 'defaultPCAalign' : true/false (false)
+                % If true: atoms coordinates will be rotated so that the greatest positional variation will be along the z-axis, then the y-axis, and the least variation along the x-axis 
             
             expectedShapes = {'SAS','MS','vdw','electron_density'};
             defaultShape = 'MS';
@@ -53,6 +55,7 @@ classdef molShape < handle
             defaultSmearFactor = 0.3;
             defaultShellThickness = 2;
             defaultShowLog = false;
+            defaultPCAalign = false;
             
             p = inputParser;
             
@@ -65,10 +68,12 @@ classdef molShape < handle
             addOptional(p, 'ProbeRadius', defaultProbeRadius, @(x)validateattributes(x,{'numeric'}, {'nonempty','positive'}, 'probe_radius'));
             addOptional(p, 'SmearFactor', defaultSmearFactor,@(x)validateattributes(x,{'numeric'}, {'nonempty','nonnegative','<',1}, 'smear_factor'));
             addOptional(p, 'ShellThickness', defaultShellThickness, @(x)validateattributes(x,{'numeric'}, {'nonempty','integer','positive'}, 'shell_thickness'));
-            
+            addOptional(p, 'PCAalign', defaultPCAalign)
             addOptional(p, 'ShowLog', defaultShowLog);
             
             parse(p, pdbStruct, varargin{:});
+            
+            obj.PCAalign = p.Results.PCAalign;
             
             obj.GridRes = p.Results.GridRes;
             obj.FunctionType = p.Results.FunctionType;
@@ -89,6 +94,10 @@ classdef molShape < handle
             end
             
             obj.AtomData = molShape.processPDBdata(pdbStruct);
+            
+            if obj.PCAalign 
+                obj.AtomData = molShape.PCAalignAtoms(obj.AtomData);
+            end
             
             if obj.ShowLog
                fprintf('Done. Execution time %2.2e s\n', toc(startTime));                    
@@ -151,6 +160,69 @@ classdef molShape < handle
     end
     
     methods (Static)
+        
+        function atomList = PCAalignAtoms(atomList)
+           
+            % cooridnates are already translated so that their centroid is
+            % placed at origo.
+            XYZ = [atomList(:,1) atomList(:,2) atomList(:,3)];
+                        
+            % compute eigenvectors from covariance matrix 
+            [V, D] = eig(cov(XYZ));
+                        
+            diagonalEigenvalues = diag(D);
+                        
+            % sort the eigenvectors based on size of eigenvalues
+            [~, I] = sort(diagonalEigenvalues,'descend');
+            V = V(:, I);
+            
+            
+            % calculate the angles of the normal vector
+            [alpha, beta] = unitVector2Angle(V(:,1));
+            
+            % align coordinates along:
+            
+            %  1) z direction
+            [~, Ry, Rz] = rotMat(-alpha, pi-beta);
+            XYZ = rotateAtoms(XYZ, Ry, Rz);
+                     
+            % 2) y-direction
+            % calculate the angles of the normal vector
+            [alpha, ~] = unitVector2Angle(V(:,2));
+                     
+            [~, Ry, Rz] = rotMat(pi/2 - alpha, 0);
+            
+            % rotate atoms
+            XYZ = rotateAtoms(XYZ, Ry, Rz);
+            
+            atomList(:,1) = XYZ(:,1);
+            atomList(:,2) = XYZ(:,2);
+            atomList(:,3) = XYZ(:,3);
+            
+            
+            function [alpha, beta] = unitVector2Angle(u)
+                % compute rotational angle between the projected u on the xy plane and the x-axis
+                alpha = atan2(u(2), u(1));
+                % compute rotational angle between the u vector and the z-axis
+                beta = atan2(sqrt(u(1)^2 + u(2)^2), u(3));
+                
+            end
+            
+            function [Rx, Ry, Rz] = rotMat(alpha, beta)
+                
+                Rx = [1 0 0; 0 cos(beta) -sin(beta); 0 sin(beta) cos(beta)];
+                Ry = [cos(beta) 0 sin(beta); 0 1 0; -sin(beta) 0 cos(beta)];
+                Rz = [cos(alpha) -sin(alpha) 0; sin(alpha) cos(alpha) 0; 0 0 1];
+                
+            end
+            
+            function XYZ = rotateAtoms(XYZ, Ry, Rz)
+               
+                XYZ = (Ry*Rz*XYZ')';
+              
+            end
+            
+        end
         
         function [SAsolid, voxelResolution, scalingFactor] = createSAsolid(atomList, gridRes, probeRadius)
             % CREATE_SA_SOLID
