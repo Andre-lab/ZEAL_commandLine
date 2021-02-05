@@ -114,7 +114,7 @@ classdef ZEAL < handle
             % 'rot_altLocID'        :  string       'A'
             %
             % 'PCAalign'            : true/false    (false)
-            %       If true, then the atom coordinates are first rotated so that
+            %       If true, atom coordinates are aligned along their principal axes in the molShape class: coordinates are first rotated so that
             %       the largest eigenvector is along the z-axis, the second
             %       largest along the y-axis, and the last along the
             %       x-axis. 
