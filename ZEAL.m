@@ -113,6 +113,12 @@ classdef ZEAL < handle
             % 'rot_chainID'         :  string      ('A')
             % 'rot_altLocID'        :  string       'A'
             %
+            % 'PCAalign'            : true/false    (false)
+            %       If true, then the atom coordinates are first rotated so that
+            %       the largest eigenvector is along the z-axis, the second
+            %       largest along the y-axis, and the last along the
+            %       x-axis. 
+            %
             %
             % OUTPUT and USAGE
             % -------------------------------------------------------------
@@ -222,6 +228,8 @@ classdef ZEAL < handle
             
             addOptional(p, 'SearchSaveFactor', default_searchSaveFactor);
             
+            addOptional(p, 'PCAalign', false);
+            
             % Parse and set defaults
             parse(p, fix, varargin{:});
             
@@ -239,6 +247,7 @@ classdef ZEAL < handle
             obj.Settings.molShape.ProbeRadius = p.Results.ProbeRadius;
             obj.Settings.molShape.SmearFactor = p.Results.SmearFactor;
             obj.Settings.molShape.ShellThickness = p.Results.ShellThickness;
+            obj.Settings.molShape.PCAalign = p.Results.PCAalign;
             
             obj.AlignLater = p.Results.AlignLater;
             obj.InputParserOnly = p.Results.InputParserOnly;
@@ -630,9 +639,7 @@ classdef ZEAL < handle
             
             fixName = p.Results.fixName;
             rotName = p.Results.rotName;
-            
-            saveSuccessFul = false;
-            
+                                    
             try
                 
                 if strcmp(selectedStructure,'fixed') ||  strcmp(selectedStructure,'all')
@@ -703,6 +710,8 @@ classdef ZEAL < handle
                 saveSuccessFul = true;
                 
             catch ME
+                
+                saveSuccessFul = false;
                 
                 rethrow(ME)
                 
@@ -870,6 +879,145 @@ classdef ZEAL < handle
             fclose(fid);
             
         end
+        
+        function exportTrials(obj, varargin)
+            
+            p = inputParser;                       
+            
+            default_AllTrials = false;
+            default_onefile = true;
+            default_folderPath = pwd;
+            default_sorted = true;
+            
+            addOptional(p, 'all', default_AllTrials);
+            addOptional(p, 'oneFile', default_onefile);
+            addOptional(p, 'folderPath', default_folderPath);
+            addOptional(p, 'sorted', default_sorted);
+            
+            
+            parse(p, varargin{:});
+            
+            
+            allTrials = p.Results.all;
+            oneFile = p.Results.oneFile;
+            folderPath = p.Results.folderPath;
+            sortTrials = p.Results.sorted;
+            
+            structureName = split(obj.rotating.Name,'/');
+            structureName = structureName{end};
+            
+            structureName = split(structureName,'.');
+            structureName = structureName{1};
+            
+            % get original PDBdata and parse based on chosen selection 
+                        
+            selection = obj.rotating.PDB.Selection;
+            
+            pdbData = PDB.parsePDBstruct(obj.rotating.PDB.AllData, selection);
+            
+            T = getTranslationMatrix(obj, 'rotating');
+
+            xyz_original = [pdbData.X pdbData.Y pdbData.Z];
+            
+            if sortTrials
+                % sort trials data
+                [Fval, ind] = sort(-1*obj.Search.SurrOptOut.trials.Fval);
+                X = obj.Search.SurrOptOut.trials.X(ind,:);
+                
+                if isequal(allTrials,false)
+                    
+                    % remove trials worse than original
+                    
+                    init_ind = find((sum(X==0,2)) == 3);
+                    
+                    Fval(1:init_ind) = [];
+                    X(1:init_ind,:) = [];
+                    
+                end
+                
+            else
+                
+                Fval = -1*obj.Search.SurrOptOut.trials.Fval;
+                X = obj.Search.SurrOptOut.trials.X;
+                
+            end
+            
+            if oneFile
+                if sortTrials
+                    rotName = sprintf('rot_trials_sorted_%s_ZEAL.pdb', structureName);
+                else
+                    rotName = sprintf('rot_trials_%s_ZEAL.pdb', structureName);
+                end
+                filePath=fullfile(folderPath, rotName);
+                fid = fopen(filePath, 'w');
+                
+            else
+                
+                if sortTrials
+                    
+                    basename = sprintf('rot_sorted_%s', structureName);
+                else
+                    basename = sprintf('rot_%s', structureName);
+                end
+            end
+            
+            
+            % loop over number of trials
+            for i = 1:size(X,1)
+                
+                try
+                    
+                pdbData_i = pdbData;
+                
+                % get Euler angles
+                Euler_i = X(i,:);
+                Score_i = Fval(i);
+                
+                % compute rotation matrix
+                R = eye(4);
+                R(1:3, 1:3) = ZEAL.euler2rotMat(Euler_i);
+                
+                % transform coordinates
+                xyzRot = [ xyz_original ones(length(xyz_original),1)] * T * R;
+                
+                % update PDBdata
+                pdbData_i.X = xyzRot(:,1);
+                pdbData_i.Y = xyzRot(:,2);
+                pdbData_i.Z = xyzRot(:,3);
+                
+                
+                if ~oneFile                    
+                    rotName = sprintf('%s_%d_score_%2.2f_ZEAL', basename,i, Score_i);
+                    filePath=fullfile(folderPath, rotName);
+                    fid = fopen(filePath, 'w');
+                    
+                end
+                
+                ZEAL.writeModel(fid, pdbData_i)
+            
+                fprintf( fid, 'END\n');
+                
+                if ~oneFile
+                   fclose(fid); 
+                end
+                
+                catch ME
+                    
+                    fprintf(ME.message);
+                    
+                    
+                end
+                
+            end
+            
+            if oneFile
+               fclose(fid); 
+            end
+            
+            
+        end
+        
+        
         
         function obj = mergeZEAL(fixObj, rotObj)
             % method to merge two ZEAL objects in "single mode" to a new
@@ -1130,13 +1278,13 @@ classdef ZEAL < handle
                     resNum(n), X(n), Y(n), Z(n), occupancy(n), betaFactor(n), ...
                     cell2mat(element(n)), cell2mat(charge(n)));
                 
-                % output progress in terminal
-                if ~mod(n,400)
-                    fprintf('   %6.2f%%', 100*n / length(atomNum));
-                    if ~mod(n, 4000)
-                        fprintf('\n');
-                    end
-                end
+%                 % output progress in terminal
+%                 if ~mod(n,400)
+%                     fprintf('   %6.2f%%', 100*n / length(atomNum));
+%                     if ~mod(n, 4000)
+%                         fprintf('\n');
+%                     end
+%                 end
                 
             end
             
