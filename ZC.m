@@ -1346,6 +1346,54 @@ classdef ZC < handle
             
         end
         
+        function Descriptors = moments2descriptors(Moments, order)
+            
+            nInvariants = ZC.numberOfInvariants(order);
+            
+            Descriptors = zeros(nInvariants,1);
+            
+            inv_count = 0;
+            
+            for n = 0:order
+                
+                % sum_tmp = 0; % NB This is the bug in the original N&K
+                % code that caused the invariants to be cumulatative. Keep
+                % this information for legacy reasons.
+                
+                for l = mod(n,2):2:n
+                    
+                    sum_tmp = 0;
+                    
+                    for m=-l:l
+                        
+                        absM = abs(m);
+                        
+                        % The ZC_nlm moment
+                        mom = Moments.CellValues(n+1, l+1, absM+1);
+                        
+                        %conjugate if m negative
+                        if m<0
+                            mom = conj(mom);
+                            % take care of sign for odd m
+                            if mod(absM,2)
+                                mom = -1*mom;
+                            end
+                        end
+                        
+                        sum_tmp = sum_tmp + norm(mom)^2;
+                        % the C++ std:norm function gives the square of the L2
+                        %(euclidian norm), which is the so called field norm
+                        
+                    end
+                    
+                    inv_count = inv_count + 1;
+                    Descriptors(inv_count,1) =  sqrt(sum_tmp);
+                    
+                end
+            end
+            
+        end
+        
     end % method (Static)
     
 end % (classDef)
