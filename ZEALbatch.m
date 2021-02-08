@@ -90,6 +90,8 @@ classdef ZEALbatch
             default_NumCores = 4;
             default_PDBoutput = false;
             default_OutputPath = pwd;
+            default_KeepMoments = false;
+            
             p = inputParser;
             p.KeepUnmatched = true;
             
@@ -97,6 +99,7 @@ classdef ZEALbatch
             addOptional(p, 'NumCores', default_NumCores);
             addOptional(p, 'PDBoutput', default_PDBoutput);
             addOptional(p, 'OutputPath', default_OutputPath);
+            addOptional(p, 'KeepMoments', default_KeepMoments);
             
             parse(p, varargin{:});
             
@@ -104,6 +107,7 @@ classdef ZEALbatch
             numCores = p.Results.NumCores;
             PDBoutput = p.Results.PDBoutput;
             outputPath = p.Results.OutputPath;
+            keepMoments = p.Results.KeepMoments;
             
             % set up parpool
             if parOp
@@ -131,8 +135,15 @@ classdef ZEALbatch
             
             fix_descriptors = zeros(obj.Batch.N, nInvariants);
             rot_descriptors = zeros(obj.Batch.N, nInvariants);
-            fix_moments = zeros(obj.Batch.N, nMoments);
-            rot_moments = zeros(obj.Batch.N, nMoments);
+            
+            if keepMoments
+                fix_moments = zeros(obj.Batch.N, nMoments);
+                rot_moments = zeros(obj.Batch.N, nMoments);
+                
+                fix_moments_cell = cell(obj.Batch.N, 1);
+                rot_moments_cell = cell(obj.Batch.N, 1);
+            end
+            
             fix_Rg = zeros(obj.Batch.N, 1);
             rot_Rg = zeros(obj.Batch.N, 1);
             
@@ -179,8 +190,13 @@ classdef ZEALbatch
                                 fix_descriptors(i,:) = shape_i.fixed.ZC.Descriptors;
                                 rot_descriptors(i,:) = shape_i.rotating.ZC.Descriptors;
                                 
-                                fix_moments(i,:) = shape_i.fixed.ZC.Moments.Values;
-                                rot_moments(i,:) = shape_i.fixed.ZC.Moments.Values;
+                                if keepMoments
+                                    fix_moments(i,:) = shape_i.fixed.ZC.Moments.Values;
+                                    rot_moments(i,:) = shape_i.fixed.ZC.Moments.Values;
+                                    
+                                    fix_moments_cell{i} = shape_i.fixed.ZC.Moments.CellValues;
+                                    rot_moments_cell{i} = shape_i.rotating.ZC.Moments.CellValues;
+                                end
                                 
                                 score(i) = shape_i.Score;
                                 
@@ -224,8 +240,13 @@ classdef ZEALbatch
                                 rot_descriptors(i,:) = shape_i.rotating.ZC.Descriptors;
                                 score(i) = shape_i.Score;
                                 
-                                fix_moments(i,:) = shape_i.fixed.ZC.Moments.Values;
-                                rot_moments(i,:) = shape_i.fixed.ZC.Moments.Values;
+                                if keepMoments
+                                    fix_moments(i,:) = shape_i.fixed.ZC.Moments.Values;
+                                    rot_moments(i,:) = shape_i.fixed.ZC.Moments.Values;
+                                    
+                                    fix_moments_cell{i} = shape_i.fixed.ZC.Moments.CellValues;
+                                    rot_moments_cell{i} = shape_i.rotating.ZC.Moments.CellValues;
+                                end
                                 
                                 fix_Rg(i) = shape_i.fixed.Rg;
                                 rot_Rg(i) = shape_i.rotating.Rg;
@@ -254,9 +275,14 @@ classdef ZEALbatch
                     obj.Results.Fixed.Descriptors = fix_descriptors;
                     obj.Results.Rotating.Descriptors = rot_descriptors;
                     
-                    obj.Results.Fixed.Moments = fix_moments;
-                    obj.Results.Rotating.Moments = rot_moments;
-                    
+                    if keepMoments
+                        obj.Results.Fixed.Moments.Values = fix_moments;
+                        obj.Results.Fixed.Moments.CellValues = fix_moments_cell;
+                        
+                        obj.Results.Rotating.Moments.Values = rot_moments;
+                        obj.Results.Rotating.Moments.CellValues = rot_moments_cell;
+                    end
+                                                       
                     obj.Results.Score = score;
                     
                     obj.Results.Fixed.Rg = fix_Rg;
@@ -281,7 +307,13 @@ classdef ZEALbatch
                                 if ~isempty(fix{i})
                                     shape_i = ZEAL(fix{i}, zealOptions);
                                     fix_descriptors(i,:) = shape_i.fixed.ZC.Descriptors;
-                                    fix_moments(i,:) = shape_i.fixed.ZC.Moments.Values;                                
+                                    
+                                    if keepMoments
+                                        fix_moments(i,:) = shape_i.fixed.ZC.Moments.Values;
+                                        fix_moments_cell{i} = shape_i.fixed.ZC.Moments.CellValues;                                        
+                                    end
+                                
+                                               
                                     fix_Rg(i) = shape_i.fixed.Rg;
 
                                 else
@@ -315,7 +347,12 @@ classdef ZEALbatch
                                 if ~isempty(fix{i})
                                     shape_i = ZEAL(fix{i}, zealOptions);
                                     fix_descriptors(i,:) = shape_i.fixed.ZC.Descriptors;
-                                    fix_moments(i,:) = shape_i.fixed.ZC.Moments.Values;                                
+                                    
+                                    if keepMoments
+                                        fix_moments(i,:) = shape_i.fixed.ZC.Moments.Values;
+                                        fix_moments_cell{i} = shape_i.fixed.ZC.Moments.CellValues;                                        
+                                    end            
+                                    
                                     fix_Rg(i) = shape_i.fixed.Rg;
                                     
                                 else
@@ -341,7 +378,11 @@ classdef ZEALbatch
                     % Gather (adapted for parfor)
                     obj.Results.Fixed.Descriptors = fix_descriptors;
                     obj.Results.Fixed.Rg = fix_Rg;
-                    obj.Results.Fixed.Moments = fix_moments;
+                    
+                    if keepMoments
+                        obj.Results.Fixed.Moments.Values = fix_moments;
+                        obj.Results.Fixed.Moments.CellValues = fix_moments_cell;
+                    end
                     
                 end
                 
