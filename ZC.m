@@ -1097,7 +1097,7 @@ classdef ZC < handle
             
         end
         
-        function shapeRecon = reconstructShape(gridRes, ZCmom_list, ZPgrid)
+        function shapeRecon = reconstructShape(gridRes, ZCm, ZPgrid)
             % Reconstruct object from ZC moments and pre-computed
             % ZC-functions for the specified grid size
             
@@ -1106,8 +1106,7 @@ classdef ZC < handle
             fprintf('\n Reconstructing shape function from moments... ');
             shapeRecon = zeros(gridRes,gridRes,gridRes);
             %grid_recon2 = grid_recon;
-            
-            ZCm = complex(ZCmom_list(:,4), ZCmom_list(:,5));
+                     
             nmoms = size(ZCm,1);
             for x =1:gridRes
                 fprintf('\n Doing layer %d/%d', x, gridRes);
