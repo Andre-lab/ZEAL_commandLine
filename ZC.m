@@ -16,7 +16,7 @@ classdef ZC < handle
     %
     % filip.persson@gmail.com
     %
-    % Last modified 2020-10-22
+    % Last modified 2021-02-08
     %
     % IMPORTANT: The bug in the original C++ library that caused the shape
     % descriptors to be cumulative has been fixed in this library.
@@ -1346,7 +1346,7 @@ classdef ZC < handle
             
         end
         
-        function Descriptors = moments2descriptors(Moments, order)
+        function Descriptors = moments2descriptors(Moments_CellValues, order)
             
             nInvariants = ZC.numberOfInvariants(order);
             
@@ -1369,7 +1369,7 @@ classdef ZC < handle
                         absM = abs(m);
                         
                         % The ZC_nlm moment
-                        mom = Moments.CellValues(n+1, l+1, absM+1);
+                        mom = Moments_CellValues(n+1, l+1, absM+1);
                         
                         %conjugate if m negative
                         if m<0
