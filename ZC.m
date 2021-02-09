@@ -1107,13 +1107,13 @@ classdef ZC < handle
             shapeRecon = zeros(gridRes,gridRes,gridRes);
             %grid_recon2 = grid_recon;
             
-%             nmoms = size(ZCm,1);
+            %             nmoms = size(ZCm,1);
             for x = 1:gridRes
                 fprintf('\n Doing layer %d/%d', x, gridRes);
                 for y = 1:gridRes
                     for z = 1:gridRes
                         
-%                         zp_tmp = reshape(ZPgrid(x,y,z,:), [nmoms 1 1 1]);
+                        %                         zp_tmp = reshape(ZPgrid(x,y,z,:), [nmoms 1 1 1]);
                         zp_tmp = squeeze(ZPgrid(x,y,z,:));
                         shapeRecon(x,y,z) = real(sum(zp_tmp.*ZCm));
                         
@@ -1181,14 +1181,14 @@ classdef ZC < handle
             addOptional(p, 'Normalize', default_NormalizeOp);
             addOptional(p, 'FilePath', default_FilePath);
             
-                        
+            
             parse(p, varargin{:});
             
             normalizeOp = p.Results.Normalize;
             filePath = p.Results.FilePath;
             
             if normalizeOp
-                                
+                
                 mat3D = DXdata.densityMatrix;                      % make name convenient
                 maxValue = max(max(max(mat3D)));                   % find max value
                 minValue = min(min(min(mat3D)));                   % find min value
@@ -1201,403 +1201,418 @@ classdef ZC < handle
             % review input data
             
             % check required input
-                if ~isfield(DXdata, 'densityMatrix')
-                    fprintf(['this profram requires a 3D matrix "densityMatrix"\n' ...
-                        'to function properly\n\texiting...']);
-                    return;
-                end
-                
-                % check optional inputs
-                if ~isfield(DXdata, 'minX')
-                    fprintf('no minX variable given, default is 0.00\n');
-                    DXdata.minX = 0;
-                end
-                if ~isfield(DXdata, 'minY')
-                    fprintf('no minY variable given, default is 0.00\n');
-                    DXdata.minY = 0;
-                end
-                if ~isfield(DXdata, 'minZ')
-                    fprintf('no minZ variable given, default is 0.00\n');
-                    DXdata.minZ = 0;
-                end
-                if ~isfield(DXdata, 'outfile')
-                    fprintf('no output file name given, default is mat2dx.dx\n');
-                    DXdata.outfile = 'mat2dx.dx';
-                end
-                if ~isfield(DXdata, 'voxelLength')
-                    fprintf('no voxel length given, default is 1.00 angstroms\n');
-                    DXdata.voxelLength = 1;
-                end
-                
-                fprintf('outputting 3D data to %s\n', DXdata.outfile);
-                
-                % prepare variables for output function
-                
-                % relabel variables
-                outfile = DXdata.outfile;
-                minX = DXdata.minX;
-                minY = DXdata.minY;
-                minZ = DXdata.minZ;
-                voxelLength = DXdata.voxelLength;
-                densityMatrix = DXdata.densityMatrix;
-                
-                % convenience variables
-                dimen = size(densityMatrix);
-                totalElements = prod(dimen);
-                overFlowVals = mod(totalElements,3);
-                numRows = floor(totalElements / 3);
-                
-                % reshape data for fast output
-                densityMatrix = reshape(permute(densityMatrix, [3 2 1]), [1 totalElements]);
-                out3DMat = reshape(densityMatrix(1:end - overFlowVals), [3 numRows])';
-                
-                % output data into file
-                
-                % begin file creation
-                FILE = fopen(outfile, 'w');
-                
-                % output header information
-                fprintf( FILE, 'object 1 class gridpositions counts%8.0f%8.0f%8.0f\n', ...
-                    dimen(1), dimen(2), dimen(3));
-                fprintf( FILE, 'origin%16g%16g%16g\n', minX, minY, minZ);
-                fprintf( FILE, 'delta%16g 0 0\n', voxelLength);
-                fprintf( FILE, 'delta 0 %16g 0\n', voxelLength);
-                fprintf( FILE, 'delta 0 0 %16g\n', voxelLength);
-                fprintf( FILE, 'object 2 class gridconnections counts%8.0f%8.0f%8.0f\n', ...
-                    dimen(1), dimen(2), dimen(3));
-                fprintf( FILE, 'object 3 class array type double rank 0 items  %g data follows\n', ...
-                    totalElements);
-                
-                % output density information
-                newLine = 0;
-                for n = 1:numRows
-                    fprintf(FILE,'%16E%16E%16E\n',out3DMat(n,:));
-                    % output status 
-                    if ~mod(n, floor(numRows/20))
-                        fprintf('   %6.0f%%',n/numRows*100);
-                        newLine = newLine + 1;
-                        if ~mod(newLine,5)
-                            fprintf('\n');
-                        end
-                    end
-                end
-                if overFlowVals > 0 % values not in complete row
-                    for n = 1:overFlowVals
-                        fprintf(FILE,'%16E',densityMatrix(end-n+1));
-                    end
-                    fprintf(FILE,'\n');
-                end
-                fprintf('\n');
-                
-                % output file tail
-                fprintf( FILE, ['attribute "dep" string "positions"\n' ...
-                    'object "regular positions regular connections" class field\n' ...
-                    'component "positions" value 1\n' ...
-                    'component "connections" value 2\n' ...
-                    'component "data" value 3\n']);
-                
-                %fprintf( FILE, 'object "Untitled" call field\n'); % alternate tail
-                
-                fclose(FILE);
-                
+            if ~isfield(DXdata, 'densityMatrix')
+                fprintf(['this profram requires a 3D matrix "densityMatrix"\n' ...
+                    'to function properly\n\texiting...']);
+                return;
             end
             
-            function ZCfunGrid = computeZCfunctionsGrid(gridRes, order, scaleOption, chi_coeff_cell, chi_nlm_rst_cell, parOp, poolSize)
-                % To speed up reconstructions we can precompute and save the Zernike
-                % functions for each voxel in the grid. This scripts will compute all the
-                %  N_ZCmoments 3D double precision complex arrays which can be saved for
-                %  later use.
-                
-                % Default scaling is to consider object-voxels to be scaled to fit within 70% of unit ball
-                % radius.
-                
-                
-                % INPUT
-                % -------------------------------------------------------------
-                % <gridRes> : side length of the cubic grid
-                
-                % <order> : integer
-                % The maximum expansion order
-                
-                % <chi_coeff_cell> : cell array
-                % The chi coefficients from ZC.computeChiCoeffs (precomputed and
-                % loaded from mat files typically (can be expensive to compute))
-                
-                % <chi_nlm_rst_cell> : cell array
-                % The indices to label the chi coefficients from ZC.computeChiCoeffs
-                
-                % <scale_option> : 1,2,3
-                % 1  =  scaling so that the maximum distance between a filled voxel
-                %       and the grid centroid is 70 % of the unit ball radius.
-                
-                % 2  =  (Used by Novotni & Klein) =  scaling by 2 x Radius of gyration
-                %       (average distance between filled voxels and the grid
-                %       centroid).
-                
-                % 3  =  scaling so that the maximum distance between a
-                %       filled voxel and the grid centroid is 100 % of the unit ball radius.
-                
-                % parOp : true/false
-                % Use parallell computation
-                
-                % poolSize : number of workers to use for parallell computation
-                
-                
-                % OUTPUT
-                % -------------------------------------------------------------
-                % <ZCfunGrid> : NxNxNxM complex array
-                % contains all ZC-function values up to order M for each voxel in
-                % the NxNxN cubic grid
-                
-                
-                % --------------------------------------------------------------------------
-                
-                nmoms = round((1/6)*(1+order)*(2+order)*(3+order));
-                index_list = zeros(nmoms,3);
-                ZCfunGrid = complex(zeros(gridRes, gridRes, gridRes, nmoms) );
-                
-                [dimX, dimY, dimZ, ~] = size(ZCfunGrid);
-                
-                xdimvec = (1:dimX);
-                xCOG = mean(xdimvec);
-                
-                ydimvec = (1:dimY);
-                yCOG = mean(ydimvec);
-                
-                zdimvec = (1:dimZ);
-                zCOG = mean(zdimvec);
-                
-                switch scaleOption
-                    case 1
-                        scale = 1/(dimX/2) * 0.7;
-                    case 2
-                        gv = (-dimX/2:dimX/2)/(dimX/2);
-                        [xdata, ydata, zdata] = meshgrid(gv, gv, gv);
-                        
-                        d = sqrt(xdata.^2 + ydata.^2 + zdata.^2);
-                        
-                        scale = 1/ (2*mean(d(d<=1)));
-                        
-                    case 3
-                        scale = 1/(dimX/2);
-                end
-                
-                if parOp
-                    
-                    p = gcp('nocreate');
-                    
-                    if isempty(p)
-                        fprintf('\nSetting up a parpool with %d workers\n', poolSize);
-                        parpool(poolSize)
-                    else
-                        poolSize = p.NumWorkers;
-                        fprintf('\nParpool running with %d workers\n', poolSize);
+            % check optional inputs
+            if ~isfield(DXdata, 'minX')
+                fprintf('no minX variable given, default is 0.00\n');
+                DXdata.minX = 0;
+            end
+            if ~isfield(DXdata, 'minY')
+                fprintf('no minY variable given, default is 0.00\n');
+                DXdata.minY = 0;
+            end
+            if ~isfield(DXdata, 'minZ')
+                fprintf('no minZ variable given, default is 0.00\n');
+                DXdata.minZ = 0;
+            end
+            if ~isfield(DXdata, 'outfile')
+                fprintf('no output file name given, default is mat2dx.dx\n');
+                DXdata.outfile = 'mat2dx.dx';
+            end
+            if ~isfield(DXdata, 'voxelLength')
+                fprintf('no voxel length given, default is 1.00 angstroms\n');
+                DXdata.voxelLength = 1;
+            end
+            
+            fprintf('outputting 3D data to %s\n', DXdata.outfile);
+            
+            % prepare variables for output function
+            
+            % relabel variables
+            outfile = DXdata.outfile;
+            minX = DXdata.minX;
+            minY = DXdata.minY;
+            minZ = DXdata.minZ;
+            voxelLength = DXdata.voxelLength;
+            densityMatrix = DXdata.densityMatrix;
+            
+            % convenience variables
+            dimen = size(densityMatrix);
+            totalElements = prod(dimen);
+            overFlowVals = mod(totalElements,3);
+            numRows = floor(totalElements / 3);
+            
+            % reshape data for fast output
+            densityMatrix = reshape(permute(densityMatrix, [3 2 1]), [1 totalElements]);
+            out3DMat = reshape(densityMatrix(1:end - overFlowVals), [3 numRows])';
+            
+            % output data into file
+            
+            % begin file creation
+            FILE = fopen(outfile, 'w');
+            
+            % output header information
+            fprintf( FILE, 'object 1 class gridpositions counts%8.0f%8.0f%8.0f\n', ...
+                dimen(1), dimen(2), dimen(3));
+            fprintf( FILE, 'origin%16g%16g%16g\n', minX, minY, minZ);
+            fprintf( FILE, 'delta%16g 0 0\n', voxelLength);
+            fprintf( FILE, 'delta 0 %16g 0\n', voxelLength);
+            fprintf( FILE, 'delta 0 0 %16g\n', voxelLength);
+            fprintf( FILE, 'object 2 class gridconnections counts%8.0f%8.0f%8.0f\n', ...
+                dimen(1), dimen(2), dimen(3));
+            fprintf( FILE, 'object 3 class array type double rank 0 items  %g data follows\n', ...
+                totalElements);
+            
+            % output density information
+            newLine = 0;
+            for n = 1:numRows
+                fprintf(FILE,'%16E%16E%16E\n',out3DMat(n,:));
+                % output status
+                if ~mod(n, floor(numRows/20))
+                    fprintf('   %6.0f%%',n/numRows*100);
+                    newLine = newLine + 1;
+                    if ~mod(newLine,5)
+                        fprintf('\n');
                     end
                 end
-                
-                fprintf('\n\n\t PRE-PROCESSING DATA');
-                fprintf('\n---------------------------------------');
-                
-                % only reconstruct voxels within unit ball
-                [x_ptsMesh, y_ptsMesh, z_ptsMesh] = meshgrid(1:dimX, 1:dimY, 1:dimZ);
-                
-                x_ptsMesh = (x_ptsMesh - xCOG) * scale;
-                y_ptsMesh = (y_ptsMesh - yCOG) * scale;
-                z_ptsMesh = (z_ptsMesh - zCOG) * scale;
-                
-                dists = sqrt( x_ptsMesh.^2 + y_ptsMesh.^2 + z_ptsMesh.^2);
-                
-                withinBall = dists<1;
-                withinBall_tot = sum(sum(sum(withinBall)));
-                
-                fprintf('\nNumber of Zernike polynomials to compute within unit ball: %5.0f', sum( sum( sum(withinBall) ) ) );
-                
-                % Pre-compute monomials
-                fprintf('\nComputing table of all monomials (x^r * y^s * z^t; r+s+t <= order)');
-                
-                x_ptsVec = (xdimvec - xCOG) * scale;
-                y_ptsVec = (ydimvec - yCOG) * scale;
-                z_ptsVec = (zdimvec - zCOG) * scale;
-                
-                order_vec = 0:order;
-                
-                monomials_x = power( (ones(order + 1, 1) * x_ptsVec), (ones(dimX, 1) * order_vec)' );
-                monomials_y = power( (ones(order + 1, 1) * y_ptsVec), (ones(dimY, 1) * order_vec)' );
-                monomials_z = power( (ones(order + 1, 1) * z_ptsVec), (ones(dimZ, 1) * order_vec)' );
-                
-                
-                fprintf('\n\n\t COMPUTING ZC function for a %d grid and up to order %d ', gridRes, order);
-                fprintf('\n---------------------------------------');
-                
-                fprintf('\n\n%5.0f percent completed:  %5.2f min remaining', 0, NaN);
-                nvoxc=0;
-                
-                for x = 1:dimX
-                    
-                    start = tic;
-                    fprintf('\n Doing layer %3.0f (%3.0f)', x, dimX);
-                    
-                    for y = 1:dimY
-                        
-                        for z = 1:dimZ
-                            
-                            % only process voxels within unit ball
-                            if withinBall(x,y,z)
-                                
-                                momcount=0;
-                                
-                                for n=0:order
-                                    
-                                    l0 = mod(n,2);
-                                    for l = l0:2:n
-                                        
-                                        for m = -l:l
-                                            % Evaluate zernike polynomial Zp_{n,l,m} at point [x y z]
-                                            zp = complex(0);
-                                            absM = abs(m);
-                                            
-                                            chi_values = chi_coeff_cell{n+1, l+1, absM+1};
-                                            chi_nlm_rst = chi_nlm_rst_cell{n+1, l+1, absM+1};
-                                            nCoeffs = size(chi_nlm_rst, 1);
-                                            
-                                            % conjugate if m negative
-                                            if m < 0
-                                                chi_values = conj(chi_values);
-                                                % take care of sign
-                                                if mod(absM,2)
-                                                    chi_values = -1*chi_values;
-                                                end
-                                            end
-                                            
-                                            % loop over invariants
-                                            for i = 1:nCoeffs
-                                                
-                                                zp = zp + chi_values(i) ...
-                                                    * monomials_x(chi_nlm_rst(i, 4)+1, x) ...
-                                                    * monomials_y(chi_nlm_rst(i, 5)+1, y) ...
-                                                    * monomials_z(chi_nlm_rst(i, 6)+1, z);
-                                                
-                                            end %i
-                                            
-                                            momcount = momcount+1;
-                                            index_list(momcount,:) = [n l m ];
-                                            
-                                            ZCfunGrid(x,y,z,momcount) = zp;
-                                            
-                                        end %m
-                                        
-                                    end % end l
-                                    
-                                end % n
-                                
-                            end % if within ball
-                            
-                        end % z
-                    end % y
-                    
-                    stop = toc(start);
-                    
-                    nvoxs_in_layer = sum(sum(withinBall(x,:,:)));
-                    
-                    nvoxc = nvoxc + nvoxs_in_layer;
-                    
-                    t_pervox = stop/nvoxs_in_layer;
-                    
-                    tleft = (withinBall_tot-nvoxc)*t_pervox;
-                    
-                    fprintf(repmat('\b',1,69))
-                    %     fprintf('\n\n%5.0f percent completed:  %5.2f min remaining', x/dimX*100, stop/60*(dimX-x));
-                    fprintf('\n\n%5.0f percent completed:  %5.2f min remaining', nvoxc/withinBall_tot*100, tleft/60);
-                    
-                end % x
-                
-                stopend = toc(startbeg);
-                
-                fprintf('\n Total execution time: %2.2f min', stopend/60);
-                
-                saveFilename = sprintf('ZP_%dgrid_order%d.mat', grid_res, order);
-                
-                fprintf('\n\n Saving data to file %s\n', saveFilename);
-                
-                save(saveFilename, 'ZCfunGrid', 'scaleOption', 'scale', '-v7.3');
-                
             end
-            
-            function Descriptors = moments2descriptors(Moments_CellValues, order)
-                
-                nInvariants = ZC.numberOfInvariants(order);
-                
-                Descriptors = zeros(nInvariants,1);
-                
-                inv_count = 0;
-                
-                for n = 0:order
-                    
-                    % sum_tmp = 0; % NB This is the bug in the original N&K
-                    % code that caused the invariants to be cumulatative. Keep
-                    % this information for legacy reasons.
-                    
-                    for l = mod(n,2):2:n
-                        
-                        sum_tmp = 0;
-                        
-                        for m=-l:l
-                            
-%                             absM = abs(m);
-                            
-                            % The ZC_nlm moment
-%                             mom = Moments_CellValues(n+1, l+1, absM+1);
-                            
-                            mom = Moments_CellValues(n+1, l+1, m+l+1);
-                          
-%                             
-%                             %conjugate if m negative
-%                             if m<0
-%                                 mom = conj(mom);
-%                                 % take care of sign for odd m
-%                                 if mod(absM,2)
-%                                     mom = -1*mom;
-%                                 end
-%                             end
-                            
-                            sum_tmp = sum_tmp + norm(mom)^2;
-                            % the C++ std:norm function gives the square of the L2
-                            %(euclidian norm), which is the so called field norm
-                            
-                        end
-                        
-                        inv_count = inv_count + 1;
-                        Descriptors(inv_count,1) =  sqrt(sum_tmp);
-                        
-                    end
+            if overFlowVals > 0 % values not in complete row
+                for n = 1:overFlowVals
+                    fprintf(FILE,'%16E',densityMatrix(end-n+1));
                 end
-                
+                fprintf(FILE,'\n');
             end
+            fprintf('\n');
             
-            function Descriptors = moments2descriptors_list(momentsList)
-                % input should have the same format as ZC.Moments.IndicesList
-                               
-                ZCmoments = complex(momentsList(:,4), momentsList(:,5));
-              
-                d = [true; diff(momentsList(:,2)) ~= 0; true];
-                
-                startRowId = find(d);
-                
-                nInvariants = numel(startRowId)-1;
-                
-                Descriptors = zeros(nInvariants,1);
-                
-                for n = 1:numel(startRowId)-1
-                                        
-                    sumInterval = startRowId(n):(startRowId(n+1)-1);
-                
-                    Descriptors(n) = norm(ZCmoments(sumInterval),2);
-                                        
-                end
-                
-            end
+            % output file tail
+            fprintf( FILE, ['attribute "dep" string "positions"\n' ...
+                'object "regular positions regular connections" class field\n' ...
+                'component "positions" value 1\n' ...
+                'component "connections" value 2\n' ...
+                'component "data" value 3\n']);
             
-    end % method (Static)
+            %fprintf( FILE, 'object "Untitled" call field\n'); % alternate tail
+            
+            fclose(FILE);
+            
+        end
         
-    end % (classDef)
+        function ZCfunGrid = computeZCfunctionsGrid(gridRes, order, scaleOption, chi_coeff_cell, chi_nlm_rst_cell, parOp, poolSize)
+            % To speed up reconstructions we can precompute and save the Zernike
+            % functions for each voxel in the grid. This scripts will compute all the
+            %  N_ZCmoments 3D double precision complex arrays which can be saved for
+            %  later use.
+            
+            % Default scaling is to consider object-voxels to be scaled to fit within 70% of unit ball
+            % radius.
+            
+            
+            % INPUT
+            % -------------------------------------------------------------
+            % <gridRes> : side length of the cubic grid
+            
+            % <order> : integer
+            % The maximum expansion order
+            
+            % <chi_coeff_cell> : cell array
+            % The chi coefficients from ZC.computeChiCoeffs (precomputed and
+            % loaded from mat files typically (can be expensive to compute))
+            
+            % <chi_nlm_rst_cell> : cell array
+            % The indices to label the chi coefficients from ZC.computeChiCoeffs
+            
+            % <scale_option> : 1,2,3
+            % 1  =  scaling so that the maximum distance between a filled voxel
+            %       and the grid centroid is 70 % of the unit ball radius.
+            
+            % 2  =  (Used by Novotni & Klein) =  scaling by 2 x Radius of gyration
+            %       (average distance between filled voxels and the grid
+            %       centroid).
+            
+            % 3  =  scaling so that the maximum distance between a
+            %       filled voxel and the grid centroid is 100 % of the unit ball radius.
+            
+            % parOp : true/false
+            % Use parallell computation
+            
+            % poolSize : number of workers to use for parallell computation
+            
+            
+            % OUTPUT
+            % -------------------------------------------------------------
+            % <ZCfunGrid> : NxNxNxM complex array
+            % contains all ZC-function values up to order M for each voxel in
+            % the NxNxN cubic grid
+            
+            
+            % --------------------------------------------------------------------------
+            
+            nmoms = round((1/6)*(1+order)*(2+order)*(3+order));
+            index_list = zeros(nmoms,3);
+            ZCfunGrid = complex(zeros(gridRes, gridRes, gridRes, nmoms) );
+            
+            [dimX, dimY, dimZ, ~] = size(ZCfunGrid);
+            
+            xdimvec = (1:dimX);
+            xCOG = mean(xdimvec);
+            
+            ydimvec = (1:dimY);
+            yCOG = mean(ydimvec);
+            
+            zdimvec = (1:dimZ);
+            zCOG = mean(zdimvec);
+            
+            switch scaleOption
+                case 1
+                    scale = 1/(dimX/2) * 0.7;
+                case 2
+                    gv = (-dimX/2:dimX/2)/(dimX/2);
+                    [xdata, ydata, zdata] = meshgrid(gv, gv, gv);
+                    
+                    d = sqrt(xdata.^2 + ydata.^2 + zdata.^2);
+                    
+                    scale = 1/ (2*mean(d(d<=1)));
+                    
+                case 3
+                    scale = 1/(dimX/2);
+            end
+            
+            if parOp
+                
+                p = gcp('nocreate');
+                
+                if isempty(p)
+                    fprintf('\nSetting up a parpool with %d workers\n', poolSize);
+                    parpool(poolSize)
+                else
+                    poolSize = p.NumWorkers;
+                    fprintf('\nParpool running with %d workers\n', poolSize);
+                end
+            end
+            
+            fprintf('\n\n\t PRE-PROCESSING DATA');
+            fprintf('\n---------------------------------------');
+            
+            % only reconstruct voxels within unit ball
+            [x_ptsMesh, y_ptsMesh, z_ptsMesh] = meshgrid(1:dimX, 1:dimY, 1:dimZ);
+            
+            x_ptsMesh = (x_ptsMesh - xCOG) * scale;
+            y_ptsMesh = (y_ptsMesh - yCOG) * scale;
+            z_ptsMesh = (z_ptsMesh - zCOG) * scale;
+            
+            dists = sqrt( x_ptsMesh.^2 + y_ptsMesh.^2 + z_ptsMesh.^2);
+            
+            withinBall = dists<1;
+            withinBall_tot = sum(sum(sum(withinBall)));
+            
+            fprintf('\nNumber of Zernike polynomials to compute within unit ball: %5.0f', sum( sum( sum(withinBall) ) ) );
+            
+            % Pre-compute monomials
+            fprintf('\nComputing table of all monomials (x^r * y^s * z^t; r+s+t <= order)');
+            
+            x_ptsVec = (xdimvec - xCOG) * scale;
+            y_ptsVec = (ydimvec - yCOG) * scale;
+            z_ptsVec = (zdimvec - zCOG) * scale;
+            
+            order_vec = 0:order;
+            
+            monomials_x = power( (ones(order + 1, 1) * x_ptsVec), (ones(dimX, 1) * order_vec)' );
+            monomials_y = power( (ones(order + 1, 1) * y_ptsVec), (ones(dimY, 1) * order_vec)' );
+            monomials_z = power( (ones(order + 1, 1) * z_ptsVec), (ones(dimZ, 1) * order_vec)' );
+            
+            
+            fprintf('\n\n\t COMPUTING ZC function for a %d grid and up to order %d ', gridRes, order);
+            fprintf('\n---------------------------------------');
+            
+            fprintf('\n\n%5.0f percent completed:  %5.2f min remaining', 0, NaN);
+            nvoxc=0;
+            
+            for x = 1:dimX
+                
+                start = tic;
+                fprintf('\n Doing layer %3.0f (%3.0f)', x, dimX);
+                
+                for y = 1:dimY
+                    
+                    for z = 1:dimZ
+                        
+                        % only process voxels within unit ball
+                        if withinBall(x,y,z)
+                            
+                            momcount=0;
+                            
+                            for n=0:order
+                                
+                                l0 = mod(n,2);
+                                for l = l0:2:n
+                                    
+                                    for m = -l:l
+                                        % Evaluate zernike polynomial Zp_{n,l,m} at point [x y z]
+                                        zp = complex(0);
+                                        absM = abs(m);
+                                        
+                                        chi_values = chi_coeff_cell{n+1, l+1, absM+1};
+                                        chi_nlm_rst = chi_nlm_rst_cell{n+1, l+1, absM+1};
+                                        nCoeffs = size(chi_nlm_rst, 1);
+                                        
+                                        % conjugate if m negative
+                                        if m < 0
+                                            chi_values = conj(chi_values);
+                                            % take care of sign
+                                            if mod(absM,2)
+                                                chi_values = -1*chi_values;
+                                            end
+                                        end
+                                        
+                                        % loop over invariants
+                                        for i = 1:nCoeffs
+                                            
+                                            zp = zp + chi_values(i) ...
+                                                * monomials_x(chi_nlm_rst(i, 4)+1, x) ...
+                                                * monomials_y(chi_nlm_rst(i, 5)+1, y) ...
+                                                * monomials_z(chi_nlm_rst(i, 6)+1, z);
+                                            
+                                        end %i
+                                        
+                                        momcount = momcount+1;
+                                        index_list(momcount,:) = [n l m ];
+                                        
+                                        ZCfunGrid(x,y,z,momcount) = zp;
+                                        
+                                    end %m
+                                    
+                                end % end l
+                                
+                            end % n
+                            
+                        end % if within ball
+                        
+                    end % z
+                end % y
+                
+                stop = toc(start);
+                
+                nvoxs_in_layer = sum(sum(withinBall(x,:,:)));
+                
+                nvoxc = nvoxc + nvoxs_in_layer;
+                
+                t_pervox = stop/nvoxs_in_layer;
+                
+                tleft = (withinBall_tot-nvoxc)*t_pervox;
+                
+                fprintf(repmat('\b',1,69))
+                %     fprintf('\n\n%5.0f percent completed:  %5.2f min remaining', x/dimX*100, stop/60*(dimX-x));
+                fprintf('\n\n%5.0f percent completed:  %5.2f min remaining', nvoxc/withinBall_tot*100, tleft/60);
+                
+            end % x
+            
+            stopend = toc(startbeg);
+            
+            fprintf('\n Total execution time: %2.2f min', stopend/60);
+            
+            saveFilename = sprintf('ZP_%dgrid_order%d.mat', grid_res, order);
+            
+            fprintf('\n\n Saving data to file %s\n', saveFilename);
+            
+            save(saveFilename, 'ZCfunGrid', 'scaleOption', 'scale', '-v7.3');
+            
+        end
+        
+        function Descriptors = moments2descriptors(moments)
+            % accepts as input either
+            % ZC.Moments.CellValues (which is a 3D array and not a cell despite its name)
+            % or
+            % ZC.Moments.IndicesList (which is a Nx5 array containing the n,l,m
+            % indices (col 1-3) and the real (col 4) and imaginary (col 5) ZC moments
+            
+            inputSize = size(moments);
+            
+            switch numel(inputSize)
+                                
+                case 3
+                    
+                    order = (inputSize(3)-1)/2;
+                    
+                    nInvariants = ZC.numberOfInvariants(order);
+                    
+                    Descriptors = zeros(nInvariants,1);
+                    
+                    inv_count = 0;
+                    
+                    for n = 0:order
+                        
+                        % sum_tmp = 0; % NB This is the bug in the original N&K
+                        % code that caused the invariants to be cumulatative. Keep
+                        % this information for legacy reasons.
+                        
+                        for l = mod(n,2):2:n
+                            
+                            sum_tmp = 0;
+                            
+                            for m=-l:l
+                                
+                                mom = moments(n+1, l+1, m+l+1);
+                                
+                                % Legacy code
+%                                 absM = abs(m);
+%                                 
+%                                 %  The ZC_nlm moment
+%                                 mom = moments(n+1, l+1, absM+1);
+%                                 
+%                                 %conjugate if m negative
+%                                 if m<0
+%                                     mom = conj(mom);
+%                                     % take care of sign for odd m
+%                                     if mod(absM,2)
+%                                         mom = -1*mom;
+%                                     end
+%                                 end
+                                
+                                sum_tmp = sum_tmp + norm(mom)^2;
+                                % the C++ std:norm function gives the square of the L2
+                                %(euclidian norm), which is the so called field norm
+                                
+                            end
+                            
+                            inv_count = inv_count + 1;
+                            Descriptors(inv_count,1) =  sqrt(sum_tmp);
+                            
+                        end
+                    end
+                    
+                    
+                    
+                case 2
+                    
+                    ZCmoments = complex(moments(:,4), moments(:,5));
+                    
+                    d = [true; diff(moments(:,2)) ~= 0; true];
+                    
+                    startRowId = find(d);
+                    
+                    nInvariants = numel(startRowId)-1;
+                    
+                    Descriptors = zeros(nInvariants,1);
+                    
+                    for n = 1:numel(startRowId)-1
+                        
+                        sumInterval = startRowId(n):(startRowId(n+1)-1);
+                        
+                        Descriptors(n) = norm(ZCmoments(sumInterval),2);
+                        
+                    end
+                    
+                    
+            end
+            
+        end
+        
+    end % method (Static)
     
+end % (classDef)
+
