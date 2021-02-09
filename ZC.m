@@ -1097,6 +1097,44 @@ classdef ZC < handle
             
         end
         
+        function [order] = expansionOrder(nMoments)
+            
+            p = [1 6 11 (6-nMoments*6)];
+            
+            solutions = roots(p);
+            
+            for n = 1:3               
+                if isreal(solutions(n))                    
+                    order = solutions(n);                    
+                end                
+            end
+            
+        end
+        
+        function [nlmList] = NLMlabels(order)
+            
+            nlmList = zeros(int64(ZC.numberOfMoments(order)),3);
+            
+            momCount = 0;
+            
+            for n = 0:order
+                
+                for l = mod(n,2):2:n
+                    
+                    for m=-l:l
+                        
+                        momCount = momCount + 1;
+                        
+                        nlmList(momCount,:) = [n l m];
+                        
+                    end
+                    
+                end
+                
+            end
+            
+        end
+        
         function shapeRecon = reconstructShape(gridRes, ZCm, ZPgrid)
             % Reconstruct object from ZC moments and pre-computed
             % ZC-functions for the specified grid size
@@ -1529,10 +1567,15 @@ classdef ZC < handle
             % or
             % ZC.Moments.IndicesList (which is a Nx5 array containing the n,l,m
             % indices (col 1-3) and the real (col 4) and imaginary (col 5) ZC moments
+            % or 
+            % ZC.Moments.Values (which is vector with the complex-valued
+            % moments)
             
             inputSize = size(moments);
             
-            switch numel(inputSize)
+            dim = numel(inputSize);
+            
+            switch dim
                                 
                 case 3
                     
@@ -1589,6 +1632,12 @@ classdef ZC < handle
                     
                 case 2
                     
+                    if any(inputSize) %assume vector
+                        % compute the n,l,m indices for
+                        order = ZC.expansionOrder(length(moments));                        
+                        moments = [ZC.NLMlabels(order) real(moments) imag(moments)];
+                    end
+                    
                     ZCmoments = complex(moments(:,4), moments(:,5));
                     
                     d = [true; diff(moments(:,2)) ~= 0; true];
@@ -1606,7 +1655,7 @@ classdef ZC < handle
                         Descriptors(n) = norm(ZCmoments(sumInterval),2);
                         
                     end
-                    
+              
                     
             end
             
