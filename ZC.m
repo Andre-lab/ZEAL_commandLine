@@ -1601,7 +1601,9 @@ classdef ZC < handle
                                 
                                 mom = moments(n+1, l+1, m+l+1);
                                 
-                                % Legacy code
+                                % Legacy code if input have size
+                                % (n+1)x(n+1)x(n+1)
+                                
 %                                 absM = abs(m);
 %                                 
 %                                 %  The ZC_nlm moment
@@ -1656,7 +1658,6 @@ classdef ZC < handle
                         
                     end
               
-                    
             end
             
         end
