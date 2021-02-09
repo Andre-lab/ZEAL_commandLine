@@ -1107,13 +1107,14 @@ classdef ZC < handle
             shapeRecon = zeros(gridRes,gridRes,gridRes);
             %grid_recon2 = grid_recon;
             
-            nmoms = size(ZCm,1);
-            for x =1:gridRes
+%             nmoms = size(ZCm,1);
+            for x = 1:gridRes
                 fprintf('\n Doing layer %d/%d', x, gridRes);
-                for y=1:gridRes
+                for y = 1:gridRes
                     for z = 1:gridRes
                         
-                        zp_tmp = reshape(ZPgrid(x,y,z,:), [nmoms 1 1 1]);
+%                         zp_tmp = reshape(ZPgrid(x,y,z,:), [nmoms 1 1 1]);
+                        zp_tmp = squeeze(ZPgrid(x,y,z,:));
                         shapeRecon(x,y,z) = real(sum(zp_tmp.*ZCm));
                         
                     end
@@ -1271,7 +1272,7 @@ classdef ZC < handle
                 newLine = 0;
                 for n = 1:numRows
                     fprintf(FILE,'%16E%16E%16E\n',out3DMat(n,:));
-                    % output status --> often not needed! Function is too fast!
+                    % output status 
                     if ~mod(n, floor(numRows/20))
                         fprintf('   %6.0f%%',n/numRows*100);
                         newLine = newLine + 1;
@@ -1542,19 +1543,22 @@ classdef ZC < handle
                         
                         for m=-l:l
                             
-                            absM = abs(m);
+%                             absM = abs(m);
                             
                             % The ZC_nlm moment
-                            mom = Moments_CellValues(n+1, l+1, absM+1);
+%                             mom = Moments_CellValues(n+1, l+1, absM+1);
                             
-                            %conjugate if m negative
-                            if m<0
-                                mom = conj(mom);
-                                % take care of sign for odd m
-                                if mod(absM,2)
-                                    mom = -1*mom;
-                                end
-                            end
+                            mom = Moments_CellValues(n+1, l+1, m+l+1);
+                          
+%                             
+%                             %conjugate if m negative
+%                             if m<0
+%                                 mom = conj(mom);
+%                                 % take care of sign for odd m
+%                                 if mod(absM,2)
+%                                     mom = -1*mom;
+%                                 end
+%                             end
                             
                             sum_tmp = sum_tmp + norm(mom)^2;
                             % the C++ std:norm function gives the square of the L2
@@ -1570,77 +1574,27 @@ classdef ZC < handle
                 
             end
             
-            function Descriptors = moments2descriptors_list(momentsList, order)
+            function Descriptors = moments2descriptors_list(momentsList)
+                % input should have the same format as ZC.Moments.IndicesList
+                               
+                ZCmoments = complex(momentsList(:,4), momentsList(:,5));
+              
+                d = [true; diff(momentsList(:,2)) ~= 0; true];
                 
-               
-                nInvariants = ZC.numberOfInvariants(order);
+                startRowId = find(d);
+                
+                nInvariants = numel(startRowId)-1;
                 
                 Descriptors = zeros(nInvariants,1);
                 
-                inv_count = 0;
-                                
-                momentsList_tmp = momentsList;
+                for n = 1:numel(startRowId)-1
+                                        
+                    sumInterval = startRowId(n):(startRowId(n+1)-1);
                 
-                count = 0;
-                
-                while ~isempty(momentsList_tmp)
-                   
-                    % iterate over l indices that are the same 
-                    
-                    while isequal(momentsList(1,2), momentsList(rowCount,2))
-                        
-                        
-                        
-                    end
-                    
-                    
+                    Descriptors(n) = norm(ZCmoments(sumInterval),2);
+                                        
                 end
                 
-%                 while ~isempty(momentsList_tmp) % work through list of moments
-%                     
-%                                                   
-%                             sum_tmp = 0;
-%                             momCount = 1;
-%                             listLength = size(momentsList_tmp,1);
-%                             
-%                             while isequal(momentsList_tmp(1,2), momentsList_tmp(momCount,2)) % same l
-%                                 
-%                                 % sum over all m-indices
-%                                 
-%                                 mom = complex( momentsList_tmp(momCount,4), momentsList_tmp(momCount,5) );
-%                                 
-%                                 sum_tmp = sum_tmp + norm(mom)^2;
-%                                 
-%                                 momCount = momCount + 1;
-%                                 
-%                                 if momCount > numel(-momentsList_tmp(1,2):momentsList_tmp(1,2))
-%                                     
-%                                     inv_count = inv_count + 1;
-%                                     Descriptors(inv_count,1) =  sqrt(sum_tmp);
-%                                     
-%                                     momentsList_tmp(1:momCount,:) = [];
-%                                     
-%                                     breakflag = true;
-%                                 else
-%                                     
-%                                     breakflag = false;
-%                                 end
-%                                 
-%                                 if breakflag
-%                                     break
-%                                 end
-%                                 
-%                             end
-%                                                         
-%            
-%                     
-%                     if count > 2000
-%                        disp kiss 
-%                     end
-%                     
-%                     count = count +1;
-%                 end
-%                 
             end
             
     end % method (Static)
