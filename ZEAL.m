@@ -967,51 +967,50 @@ classdef ZEAL < handle
                 
                 try
                     
-                pdbData_i = pdbData;
-                
-                % get Euler angles
-                Euler_i = X(i,:);
-                Score_i = Fval(i);
-                
-                % compute rotation matrix
-                R = eye(4);
-                R(1:3, 1:3) = ZEAL.euler2rotMat(Euler_i);
-                
-                % transform coordinates
-                xyzRot = [ xyz_original ones(length(xyz_original),1)] * T * R;
-                
-                % update PDBdata
-                pdbData_i.X = xyzRot(:,1);
-                pdbData_i.Y = xyzRot(:,2);
-                pdbData_i.Z = xyzRot(:,3);
-                
-                
-                if ~oneFile                    
-                    rotName = sprintf('%s_%d_score_%2.2f_ZEAL', basename,i, Score_i);
-                    filePath=fullfile(folderPath, rotName);
-                    fid = fopen(filePath, 'w');
+                    pdbData_i = pdbData;
                     
-                end
-                
-                ZEAL.writeModel(fid, pdbData_i)
-            
-                fprintf( fid, 'END\n');
-                
-                if ~oneFile
-                   fclose(fid); 
-                end
-                
+                    % get Euler angles
+                    Euler_i = X(i,:);
+                    Score_i = Fval(i);
+                    
+                    % compute rotation matrix
+                    R = eye(4);
+                    R(1:3, 1:3) = ZEAL.euler2rotMat(Euler_i);
+                    
+                    % transform coordinates
+                    xyzRot = [ xyz_original ones(length(xyz_original),1)] * T * R;
+                    
+                    % update PDBdata
+                    pdbData_i.X = xyzRot(:,1);
+                    pdbData_i.Y = xyzRot(:,2);
+                    pdbData_i.Z = xyzRot(:,3);
+                    
+                    
+                    if ~oneFile
+                        rotName = sprintf('%s_%d_score_%2.2f_ZEAL', basename,i, Score_i);
+                        filePath=fullfile(folderPath, rotName);
+                        fid = fopen(filePath, 'w');
+                        
+                    end
+                    
+                    ZEAL.writeModel(fid, pdbData_i)
+                    
+                    fprintf( fid, 'END\n');
+                    
+                    if ~oneFile
+                        fclose(fid);
+                    end
+                    
                 catch ME
                     
                     fprintf(ME.message);
-                    
                     
                 end
                 
             end
             
             if oneFile
-               fclose(fid); 
+                fclose(fid);
             end
             
             
@@ -1109,35 +1108,7 @@ classdef ZEAL < handle
             
             Rmat = (Rz(x(3))*Ry(x(2))*Rz(x(1)))';
             
-        end
-        
-        %         function writeModel(fid, model)
-        %             % Write PDB structure data to file (id = fid). Structure format is that from PDB class.
-        %             % Helper function to export2Pdb method in case we want to write
-        %             % multiple models to same file
-        %
-        %             nAtoms = length(model.atomNum);
-        %
-        %             % output data
-        %             try
-        %                 for n = 1:nAtoms
-        %
-        %                     % fix atomName spacing
-        %                     model.atomName(n) = {sprintf('%-3s',cell2mat(model.atomName(n)))};
-        %
-        %                     % standard PDB output line
-        %                     fprintf( fid, '%-6s%5u%5s%1.1s%3s %1.1s%4i%12.3f%8.3f%8.3f%6.2f%6.2f%12s%2s\n', ...
-        %                         cell2mat(model.recordName(n)), model.atomNum(n), cell2mat(model.atomName(n)), ...
-        %                         cell2mat(model.altLoc(n)), cell2mat(model.resName(n)), cell2mat(model.chainID(n)), ...
-        %                         model.resNum(n), model.X(n), model.Y(n), model.Z(n), model.occupancy(n), model.betaFactor(n), ...
-        %                         cell2mat(model.element(n)), cell2mat(model.charge(n)));
-        %                 end
-        %
-        %             catch
-        %                 error('Failed to write PDB records.');
-        %             end
-        %
-        %         end
+        end             
         
         function writeModel(fid, pdbData)
             
