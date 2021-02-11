@@ -34,10 +34,12 @@ classdef PDB < handle
         
         Data      % structured array containing ATOM and/or HETATOM records
         
+        AllData  % contains all records 
+        
     end
     
     properties (Hidden)
-        AllData  % contains all records 
+        
         ShowLog
     end
     
@@ -84,6 +86,7 @@ classdef PDB < handle
             default_altLocID = 'all';
             default_ShowLog = false;
             
+            
             p = inputParser;
             
             % Set required
@@ -93,6 +96,7 @@ classdef PDB < handle
             addOptional(p, 'includeHetatoms', default_includeHetatoms);
             addOptional(p, 'includeHatoms', default_includeHatoms);
             addOptional(p, 'chainID', default_chainID, @(x)validateattributes(x,{'char'}, {'nonempty'}, 'chainID'));
+            addOptional(p, 'residueNumbers', [], @(x)validateattributes(x,{'numeric'},  {'finite'},'residueNumbers'));
             addOptional(p, 'altLocID', default_altLocID, @(x)validateattributes(x,{'char'}, {'nonempty'}, 'altLocID'));
             addOptional(p, 'ShowLog', default_ShowLog);
             
@@ -105,6 +109,7 @@ classdef PDB < handle
             obj.Selection.includeHatoms = p.Results.includeHatoms;
             obj.Selection.chainID = p.Results.chainID;
             obj.Selection.altLocID = p.Results.altLocID;
+            obj.Selection.residueNumbers = p.Results.residueNumbers;
             
             obj.ShowLog = p.Results.ShowLog;
             
@@ -311,7 +316,8 @@ classdef PDB < handle
            
             %PDBdata.chainID = pdbDataCif.('label_asym_id');
             PDBdata.chainID = pdbDataCif.('auth_asym_id');
-            PDBdata.resNum = cellfun(@str2double, pdbDataCif.('label_seq_id'));
+%             PDBdata.resNum = cellfun(@str2double, pdbDataCif.('label_seq_id'));
+            PDBdata.resNum = cellfun(@str2double, pdbDataCif.('auth_seq_id'));
             PDBdata.X = cellfun(@str2double, pdbDataCif.('Cartn_x'));
             PDBdata.Y = cellfun(@str2double, pdbDataCif.('Cartn_y'));
             PDBdata.Z = cellfun(@str2double, pdbDataCif.('Cartn_z'));
@@ -349,6 +355,11 @@ classdef PDB < handle
             % <selection.altLocID>       :       string
             %   The id of any alternate locations to keep. If not defined then all
             %   included
+            %
+            % <selection.resNumbers>       :       vector            %
+            %   Integers specifying which residues to include in chosen
+            %   chains. The residues should be specified with the same numbers
+            %   as in the original PDB file
             %
             %
             % OUTPUT
@@ -394,13 +405,15 @@ classdef PDB < handle
             addOptional(p, 'includeHatoms', default_includeHatoms, @(x)validateattributes(x,{'numeric','logical'}, {'nonempty'}, 'includeHatoms'));
             addOptional(p, 'chainID', default_chainID, @(x)validateattributes(x,{'char'}, {'nonempty'}, 'chainID'));
             addOptional(p, 'altLocID', default_altLocID, @(x)validateattributes(x,{'char'}, {'nonempty'}, 'altLocID'));
-            
+            addOptional(p, 'residueNumbers', [], @(x)validateattributes(x,{'numeric'},  {'finite'},'residueNumbers'));
+
             parse(p, pdbStruct, varargin{:});
             
             includeHetatoms = p.Results.includeHetatoms;
             includeHatoms = p.Results.includeHatoms;
             chainIDsel = p.Results.chainID;
             altLocID = p.Results.altLocID;
+            residueNumbers = p.Results.residueNumbers;
             
             if strcmp(chainIDsel, 'all')
                 chainOp = false;
@@ -413,10 +426,24 @@ classdef PDB < handle
             else
                 altLocOp = true;
             end
+                        
+            if isempty(residueNumbers)
+                residuesOp = false;
+            else
+                residuesOp = true;
+                
+                keepResiduesTF = false(numel(pdbStruct.resNum),1);
+                for i = 1:numel(residueNumbers)
+                   
+                    keepResiduesTF = keepResiduesTF + (pdbStruct.resNum == residueNumbers(i));
+                                        
+                end
+                
+            end
             
-            
-            % filter based on selection options: hetatoms, H-atoms, chain
-            % and altlocs
+            %%
+            % filter based on selection options: hetatoms, H-atoms, chain,
+            % residue numbers and altlocs
             if includeHetatoms
                 keepListTF = contains(pdbStruct.recordName, {'ATOM','HETATM'});
             else
@@ -431,6 +458,10 @@ classdef PDB < handle
             if chainOp
                 keepChainTF = strcmp(pdbStruct.chainID, chainIDsel);
                 keepListTF = (keepListTF + keepChainTF) == 2;
+            end
+            
+            if residuesOp
+                keepListTF = (keepListTF + keepResiduesTF) == 2;
             end
             
             if altLocOp
