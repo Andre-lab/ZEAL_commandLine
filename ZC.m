@@ -1105,7 +1105,7 @@ classdef ZC < handle
             
             for n = 1:3               
                 if isreal(solutions(n))                    
-                    order = solutions(n);                    
+                    order = round(solutions(n));                    
                 end                
             end
             
@@ -1630,11 +1630,13 @@ classdef ZC < handle
                         end
                     end
                     
-                    
-                    
                 case 2
                     
                     if any(inputSize) %assume vector
+                        if inputSize(1)
+                            moments=moments';
+                        end
+                        
                         % compute the n,l,m indices for
                         order = ZC.expansionOrder(length(moments));                        
                         moments = [ZC.NLMlabels(order) real(moments) imag(moments)];
