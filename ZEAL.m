@@ -107,11 +107,13 @@ classdef ZEAL < handle
             % 'fix_includeHatoms'   :   true/false  (false)
             % 'fix_chainID'         :   string      ('A')
             % 'fix_altLocID'        :   string      ('A')
+            % 'fix_residueNumbers'  :   vector      ([] = all residues)
             %
             % 'rot_includeHetatoms' :  true/false  (false)
             % 'rot_includeHatoms'   :  true/false  (false)
             % 'rot_chainID'         :  string      ('A')
             % 'rot_altLocID'        :  string       'A'
+            % 'rot_residueNumbers'  :   vector      ([] = all residues)
             %
             % 'PCAalign'            : true/false    (false)
             %       If true, atom coordinates are aligned along their principal axes in the molShape class: coordinates are first rotated so that
@@ -213,11 +215,13 @@ classdef ZEAL < handle
             addOptional(p, 'fix_includeHatoms', default_includeHatoms, @(x)validateattributes(x,{'numeric', 'logical'}, {'nonempty'}, 'fix_includeHatoms'));
             addOptional(p, 'fix_chainID', default_chainID);
             addOptional(p, 'fix_altLocID', default_altLocID);
+            addOptional(p, 'fix_residueNumbers', []);
             
             addOptional(p, 'rot_includeHetatoms', default_includeHetatoms, @(x)validateattributes(x,{'numeric', 'logical'}, {'nonempty'}, 'rot_includeHetatoms'));
             addOptional(p, 'rot_includeHatoms', default_includeHatoms, @(x)validateattributes(x,{'numeric', 'logical'}, {'nonempty'}, 'rot_includeHatoms'));
             addOptional(p, 'rot_chainID', default_chainID);
             addOptional(p, 'rot_altLocID', default_altLocID);
+            addOptional(p, 'rot_residueNumbers', []);
             
             addOptional(p, 'ChiCoeffPath', default_ChiCoeffPath);
             
@@ -291,6 +295,7 @@ classdef ZEAL < handle
             obj.fixed.Selection.includeHatoms = p.Results.fix_includeHatoms;
             obj.fixed.Selection.chainID = p.Results.fix_chainID;
             obj.fixed.Selection.altLocID = p.Results.fix_altLocID;
+            obj.fixed.Selection.residueNumbers = p.Results.fix_residueNumbers;
             
             if ~obj.InputParserOnly
                 
@@ -323,6 +328,7 @@ classdef ZEAL < handle
                     obj.rotating.Selection.includeHatoms = p.Results.rot_includeHatoms;
                     obj.rotating.Selection.chainID = p.Results.rot_chainID;
                     obj.rotating.Selection.altLocID = p.Results.rot_altLocID;
+                    obj.rotating.Selection.residueNumbers = p.Results.rot_residueNumbers;
                     
                     if obj.Logging.Level > 0
                         fprintf('\n - Importing rotating structure: %s', obj.rotating.Name);
@@ -585,7 +591,7 @@ classdef ZEAL < handle
             % structure' mode (i.e. shape analysis of one structure = the fixed structure).
             
             % OPTIONAL INPUT
-            %'name'-value pairs : type : default value {expected}
+            % 'name'-value pairs : type : default value {expected}
             %
             % 'structure'       :   char : 'all'  {'fixed','rotating','all'}
             %
@@ -653,20 +659,21 @@ classdef ZEAL < handle
                     if includeAll
                         selection.chainID = 'all';
                         selection.altLocID = 'all';
+                        selection.residueNumbers = [];
                     end
-                    
-                    pdbData = PDB.parsePDBstruct(obj.fixed.PDB.AllData, selection);
                     
                     T = getTranslationMatrix(obj, 'fixed');
                     R = getRotationMatrix(obj, 'fixed');
                     
+                    pdbData = PDB.parsePDBstruct(obj.fixed.PDB.AllData, selection);
+                    
                     xyz = [pdbData.X pdbData.Y pdbData.Z];
                     
-                    xyzRot = [ xyz ones(length(xyz),1)] * T * R;
+                    xyzFix = [ xyz ones(length(xyz),1)] * T * R;
                     
-                    pdbData.X = xyzRot(:,1);
-                    pdbData.Y = xyzRot(:,2);
-                    pdbData.Z = xyzRot(:,3);
+                    pdbData.X = xyzFix(:,1);
+                    pdbData.Y = xyzFix(:,2);
+                    pdbData.Z = xyzFix(:,3);
                     
                     filePath=fullfile(folderpath, fixName);
                     
@@ -686,13 +693,14 @@ classdef ZEAL < handle
                     if includeAll
                         selection.chainID = 'all';
                         selection.altLocID = 'all';
+                        selection.residueNumbers = [];
                     end
-                    
-                    pdbData = PDB.parsePDBstruct(obj.rotating.PDB.AllData, selection);
                     
                     T = getTranslationMatrix(obj, 'rotating');
                     R = getRotationMatrix(obj, 'rotating');
                     
+                    pdbData = PDB.parsePDBstruct(obj.rotating.PDB.AllData, selection);
+                                                            
                     xyz = [pdbData.X pdbData.Y pdbData.Z];
                     
                     xyzRot = [ xyz ones(length(xyz),1)] * T * R;
@@ -733,6 +741,7 @@ classdef ZEAL < handle
             
             T = eye(4);
             T(end, :) = [-COM 1];
+
             
         end
         
@@ -887,12 +896,21 @@ classdef ZEAL < handle
             default_AllTrials = false;
             default_onefile = true;
             default_folderPath = pwd;
-            default_sorted = true;
+            default_sorted = false;
+            default_includeAll = false;
+                       
+            default_bestFoundSoFar = true;
             
             addOptional(p, 'all', default_AllTrials);
             addOptional(p, 'oneFile', default_onefile);
             addOptional(p, 'folderPath', default_folderPath);
             addOptional(p, 'sorted', default_sorted);
+            
+            addOptional(p, 'bestFoundSoFar', default_bestFoundSoFar);
+            
+            addOptional(p,'includeAll', default_includeAll);
+            
+            
             
             
             parse(p, varargin{:});
@@ -903,6 +921,10 @@ classdef ZEAL < handle
             folderPath = p.Results.folderPath;
             sortTrials = p.Results.sorted;
             
+            includeAll = p.Results.includeAll;
+            
+            bestFoundSoFar = p.Results.bestFoundSoFar;
+            
             structureName = split(obj.rotating.Name,'/');
             structureName = structureName{end};
             
@@ -912,6 +934,12 @@ classdef ZEAL < handle
             % get original PDBdata and parse based on chosen selection 
                         
             selection = obj.rotating.PDB.Selection;
+            
+            if includeAll
+                selection.chainID = 'all';
+                selection.altLocID = 'all';
+                selection.residueNumbers = [];
+            end
             
             pdbData = PDB.parsePDBstruct(obj.rotating.PDB.AllData, selection);
             
@@ -951,6 +979,12 @@ classdef ZEAL < handle
                 filePath=fullfile(folderPath, rotName);
                 fid = fopen(filePath, 'w');
                 
+                if bestFoundSoFar
+                    rotName = sprintf('rot_trialsBest_%s_ZEAL.pdb', structureName);
+                    filePath=fullfile(folderPath, rotName);
+                    fid2 = fopen(filePath, 'w');
+                end
+                
             else
                 
                 if sortTrials
@@ -963,6 +997,8 @@ classdef ZEAL < handle
             
             
             % loop over number of trials
+            
+            bestScoreSoFar = Fval(1);
             for i = 1:size(X,1)
                 
                 try
@@ -973,6 +1009,7 @@ classdef ZEAL < handle
                     Euler_i = X(i,:);
                     Score_i = Fval(i);
                     
+                                        
                     % compute rotation matrix
                     R = eye(4);
                     R(1:3, 1:3) = ZEAL.euler2rotMat(Euler_i);
@@ -985,6 +1022,10 @@ classdef ZEAL < handle
                     pdbData_i.Y = xyzRot(:,2);
                     pdbData_i.Z = xyzRot(:,3);
                     
+                    if i==1 || (Score_i > bestScoreSoFar)
+                        bestScoreSoFar = Score_i;
+                        pdbData_bestSofar = pdbData_i;
+                    end
                     
                     if ~oneFile
                         rotName = sprintf('%s_%d_score_%2.2f_ZEAL', basename,i, Score_i);
@@ -994,8 +1035,10 @@ classdef ZEAL < handle
                     end
                     
                     ZEAL.writeModel(fid, pdbData_i)
+                    ZEAL.writeModel(fid2, pdbData_bestSofar)
                     
                     fprintf( fid, 'END\n');
+                    fprintf( fid2, 'END\n');
                     
                     if ~oneFile
                         fclose(fid);
