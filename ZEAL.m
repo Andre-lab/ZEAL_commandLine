@@ -430,7 +430,7 @@ classdef ZEAL < handle
                 atomlistRot_rotated(:,1:3) = atomlistRot_rotated(:,1:3) * R;
                 
                 % Compute new shape function
-                updateShapeFunction(obj, atomlistRot_rotated)
+                updateShapeFunction(obj, atomlistRot_rotated);
                 
                 % Compute new ZC moments
                 computeMoments(obj.rotating.ZC)
@@ -439,8 +439,10 @@ classdef ZEAL < handle
                 d = -1*computeScore(obj);
                 
             end
-            
-            function updateShapeFunction(obj, atomList)
+                        
+        end
+        
+        function updateShapeFunction(obj, atomList)
                 % updateShapeFunction Computes new shape function from
                 % transformed atom coordinates (atomList)
                 
@@ -457,12 +459,33 @@ classdef ZEAL < handle
                         [obj.rotating.ZC.ShapeFunction, ~] = molShape.SAsurface(atomList, obj.Settings.molShape.GridRes, probeRadius, obj.Settings.molShape.ShellThickness);
                         
                     otherwise % electron density
-                        [obj.FunctionData, ~, ~] = molShape.electronDensity(atomLista, obj.Settings.molShape.GridRes, obj.Settings.molShape.SmearFactor);
+                        [obj.rotating.ZC.ShapeFunction, ~, ~] = molShape.electronDensity(atomLista, obj.Settings.molShape.GridRes, obj.Settings.molShape.SmearFactor);
                         
                 end
                 
-            end
-            
+        end
+        
+        function updateShapeFunction_fixed(obj, atomList)
+                % updateShapeFunction Computes new shape function from
+                % transformed atom coordinates (atomList)
+                
+                switch obj.fixed.molShape.FunctionType
+                    
+                    case 'MS' % molecular surface
+                        [obj.fixed.ZC.ShapeFunction, ~] = molShape.MSsurface(atomList, obj.Settings.molShape.GridRes, obj.Settings.molShape.ProbeRadius, obj.Settings.molShape.ShellThickness);
+                        
+                    case 'SAS' % solvent accessible surface
+                        [obj.fixed.ZC.ShapeFunction, ~] = molShape.SAsurface(atomList, obj.Settings.molShape.GridRes, obj.Settings.molShape.ProbeRadius, obj.Settings.molShape.ShellThickness);
+                        
+                    case 'vdw' % van der Waals surface
+                        probeRadius = 0;
+                        [obj.fixed.ZC.ShapeFunction, ~] = molShape.SAsurface(atomList, obj.Settings.molShape.GridRes, probeRadius, obj.Settings.molShape.ShellThickness);
+                        
+                    otherwise % electron density
+                        [obj.fixed.ZC.ShapeFunction, ~, ~] = molShape.electronDensity(atomLista, obj.Settings.molShape.GridRes, obj.Settings.molShape.SmearFactor);
+                        
+                end
+                
         end
         
         function  stop = surrOptiOutputFcn(x,optimvalues,state, obj)
@@ -494,9 +517,17 @@ classdef ZEAL < handle
                     obj.Search.History.prev_val = 0;
                     obj.Search.History.startTime = tic;
                     
+                    obj.Search.Timings = zeros(optimvalues.funccount);
+                    obj.Search.ResetCount = zeros(optimvalues.funccount);
+                    obj.Search.currFlag = cell(optimvalues.funccount);
+                    
                 case 'iter' % surrogateopt is running
                     
                     searchTime = toc(obj.Search.History.startTime);
+                    
+                    obj.Search.Timings(optimvalues.iteration+1) = searchTime;
+                    obj.Search.ResetCount(optimvalues.iteration+1) = optimvalues.surrogateResetCount;
+                    obj.Search.currFlag(optimvalues.iteration+1) = {optimvalues.currentFlag};
                     
                     if optimvalues.fval < (obj.Search.History.prev_val*obj.Search.History.SearchSaveFactor)
                         
@@ -514,6 +545,7 @@ classdef ZEAL < handle
                         if obj.Logging.Level > 1
                             fprintf('\n\t %2.2f \t\t %2.2f %2.2f %2.2f \t %d \t\t %4.1f', obj.Search.History.BestScore, x(1), x(2), x(3), obj.Search.History.BestIteration, obj.Search.History.BestTime);
                         end
+                      
                     end
                     
                 case 'done' % surrogateopt is finished
@@ -524,6 +556,7 @@ classdef ZEAL < handle
                     obj.Search.History.EulerAngles = [obj.Search.History.EulerAngles; x];
                     obj.Search.History.Score = [obj.Search.History.Score -1*optimvalues.fval];
                     
+                    obj.Search.Optimvalues = optimvalues;
                     if obj.Logging.Level > 0
                         fprintf('\n ----------------------------------------------------------------------------');
                         
@@ -763,6 +796,7 @@ classdef ZEAL < handle
             
         end
         
+    
         function exportPdb(obj, structure, pdbData, fileSavePath)
             % Save pdbdata to pdbfile with ZEAL info in REMARK fields (if 2 structures loaded)
             %
@@ -889,7 +923,7 @@ classdef ZEAL < handle
             
         end
         
-        function exportTrials(obj, varargin)
+        function data = exportTrials(obj, varargin)
             
             p = inputParser;                       
             
@@ -997,9 +1031,25 @@ classdef ZEAL < handle
             
             
             % loop over number of trials
+            Ntrials = size(X,1);
+            
+            data.bestSoFar.EulerAngles = zeros(Ntrials,3);
+            data.bestSoFar.Score = zeros(Ntrials,1);
+            data.bestSoFar.Timings = zeros(Ntrials,1);
+            data.bestSoFar.TrialCount = zeros(Ntrials,1);
+            
+            data.trials.EulerAngles = zeros(Ntrials,3);
+            data.trials.Score = zeros(Ntrials,1);
+            data.trials.Timings = zeros(Ntrials,1);
+            data.trials.TrialCount = zeros(Ntrials,1);
             
             bestScoreSoFar = Fval(1);
-            for i = 1:size(X,1)
+            bestEulerSoFar = X(1,:);
+            
+            trialCount = 0;
+            for i = 1:Ntrials
+                
+                trialCount = trialCount + 1;
                 
                 try
                     
@@ -1009,7 +1059,11 @@ classdef ZEAL < handle
                     Euler_i = X(i,:);
                     Score_i = Fval(i);
                     
-                                        
+                    data.trials.EulerAngles(i,:) = Euler_i;
+                    data.trials.Score(i,:) = Score_i;
+                    data.trials.Timings(i) = obj.Search.Timings(i);
+                    data.trials.TrialCount(i) = trialCount;   
+                    
                     % compute rotation matrix
                     R = eye(4);
                     R(1:3, 1:3) = ZEAL.euler2rotMat(Euler_i);
@@ -1024,8 +1078,18 @@ classdef ZEAL < handle
                     
                     if i==1 || (Score_i > bestScoreSoFar)
                         bestScoreSoFar = Score_i;
+                        bestEulerSoFar = Euler_i;
+                        bestTimingSoFar = obj.Search.Timings(i);
+                        bestTrialCountSoFar = trialCount;
+                        
                         pdbData_bestSofar = pdbData_i;
+                                                                        
                     end
+                    
+                    data.bestSoFar.EulerAngles(i,:) = bestEulerSoFar;
+                    data.bestSoFar.Score(i,:) = bestScoreSoFar;
+                    data.bestSoFar.Timings(i) = bestTimingSoFar;
+                    data.bestSoFar.TrialCount(i) = bestTrialCountSoFar;
                     
                     if ~oneFile
                         rotName = sprintf('%s_%d_score_%2.2f_ZEAL', basename,i, Score_i);
@@ -1152,6 +1216,7 @@ classdef ZEAL < handle
             Rmat = (Rz(x(3))*Ry(x(2))*Rz(x(1)))';
             
         end             
+        
         
         function writeModel(fid, pdbData)
             
