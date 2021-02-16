@@ -1158,12 +1158,13 @@ classdef ZC < handle
                     end
                 end
             end
-            
-            %grid_recon2 = permute(grid_recon,[2 1 3]);
+
+            shapeRecon = permute(shapeRecon,[2 1 3]);
+
             fprintf('done. \n ');
         end
         
-        function mat2DX(DXdata, varargin)
+        function mat2DX(densityMatrix, varargin)
             % this function outputs a DX file for viewing in VMD or PyMOL. It uses
             % six inputs to function properly (subvariables of "DXdata"). While only
             % one is necessary (the 3D matrix called "densityMatrix"), the others shape
@@ -1178,7 +1179,7 @@ classdef ZC < handle
             %
             % input value           meaning
             %
-            % input.densityMatrix  rectangular-prism 3D matrix holding density values.
+            % densityMatrix  rectangular-prism 3D matrix holding density values.
             %                       All XYZ values correspond to spatial location of
             %                       data.
             %
@@ -1186,98 +1187,53 @@ classdef ZC < handle
             %
             % input value        meaning                           default value
             %
-            % input.outfile      output file name                 "mat2dx.dx"
-            % input.minX         origin (min) X coord (angstroms)  0.00
-            % input.minY         origin (min) Y coord (angstroms)  0.00
-            % input.minZ         origin (min) Z coord (angstroms)  0.00
-            % input.voxelLength  length to side of voxel (angst.)  1.00
-            %
-            %
-            % -- example usage: output a spherical gradient 10 angstroms in radius --
-            %
-            % [X Y Z] = meshgrid(-10:10);                        % make a 3D gradient
-            % input.densityMatrix = ((X.^2 + Y.^2 + Z.^2).^0.5); % construct 3D space
-            % isosurface(input.densityMatrix);                   % plot in matlab
-            % mat2dx(input);                                     % output as DX file
-            %
-            % -- example usage: normalize DX output --
-            %
-            % DXdata = dx2mat('DXfile.dx');                      % interpret DX data
-            % mat3D = DXdata.densityMatrix;                      % make name convenient
-            % maxValue = max(max(max(mat3D)));                   % find max value
-            % minValue = min(min(min(mat3D)));                   % find min value
-            % valueRange = maxValue - minValue;                  % find range of data
-            % DXdata.densityMatrix = (mat3D-minValue)/valueRange; % normalize and save
-            % DXdata.outfile = 'DXfile_normaized.dx';            % rename output
-            % mat2dx(DXdata);                                    % write to DX file
-            
+            % outfile      output file name                 "mat2dx.dx"
+            % minX         origin (min) X coord (angstroms)  0.00
+            % minY         origin (min) Y coord (angstroms)  0.00
+            % minZ         origin (min) Z coord (angstroms)  0.00
+            % voxelLength  length to side of voxel (angst.)  1.00
+
             p = inputParser;
             
             default_NormalizeOp = true;
             default_FilePath = fullfile(pwd,'ZC_shapereconstruxtion.dx');            % rename output
+            default_minX = 0;
+            default_minY = 0;
+            default_minZ = 0;
+            default_voxelLength = 1;
+            
+            addRequired(p, 'densityMatrix');
             
             addOptional(p, 'Normalize', default_NormalizeOp);
             addOptional(p, 'FilePath', default_FilePath);
-            
+            addOptional(p, 'minX', default_minX);
+            addOptional(p, 'minY', default_minY);
+            addOptional(p, 'minZ', default_minZ);
+            addOptional(p, 'voxelLength', default_voxelLength);
             
             parse(p, varargin{:});
-            
+           
             normalizeOp = p.Results.Normalize;
             filePath = p.Results.FilePath;
+            minX = p.Results.minX;
+            minY = p.Results.minY;
+            minZ = p.Results.minZ;
+            voxelLength = p.Results.voxelLength;
             
             if normalizeOp
                 
-                mat3D = DXdata.densityMatrix;                      % make name convenient
-                maxValue = max(max(max(mat3D)));                   % find max value
-                minValue = min(min(min(mat3D)));                   % find min value
+                mat3D = densityMatrix;                      % make name convenient
+                maxValue = max(mat3D(:));                   % find max value
+                minValue = min(mat3D(:));                   % find min value
                 valueRange = maxValue - minValue;                  % find range of data
-                DXdata.densityMatrix = (mat3D-minValue)/valueRange; % normalize and save
-                DXdata.outfile = filePath;
-                
+                densityMatrix = (mat3D-minValue)/valueRange; % normalize and save
+
             end
+            
+            outfile = filePath;
             
             % review input data
-            
-            % check required input
-            if ~isfield(DXdata, 'densityMatrix')
-                fprintf(['this profram requires a 3D matrix "densityMatrix"\n' ...
-                    'to function properly\n\texiting...']);
-                return;
-            end
-            
-            % check optional inputs
-            if ~isfield(DXdata, 'minX')
-                fprintf('no minX variable given, default is 0.00\n');
-                DXdata.minX = 0;
-            end
-            if ~isfield(DXdata, 'minY')
-                fprintf('no minY variable given, default is 0.00\n');
-                DXdata.minY = 0;
-            end
-            if ~isfield(DXdata, 'minZ')
-                fprintf('no minZ variable given, default is 0.00\n');
-                DXdata.minZ = 0;
-            end
-            if ~isfield(DXdata, 'outfile')
-                fprintf('no output file name given, default is mat2dx.dx\n');
-                DXdata.outfile = 'mat2dx.dx';
-            end
-            if ~isfield(DXdata, 'voxelLength')
-                fprintf('no voxel length given, default is 1.00 angstroms\n');
-                DXdata.voxelLength = 1;
-            end
-            
-            fprintf('outputting 3D data to %s\n', DXdata.outfile);
-            
-            % prepare variables for output function
-            
-            % relabel variables
-            outfile = DXdata.outfile;
-            minX = DXdata.minX;
-            minY = DXdata.minY;
-            minZ = DXdata.minZ;
-            voxelLength = DXdata.voxelLength;
-            densityMatrix = DXdata.densityMatrix;
+            fprintf('outputting 3D data to %s\n', outfile);
             
             % convenience variables
             dimen = size(densityMatrix);
@@ -1339,6 +1295,7 @@ classdef ZC < handle
             fclose(FILE);
             
         end
+        
         
         function ZCfunGrid = computeZCfunctionsGrid(gridRes, order, scaleOption, chi_coeff_cell, chi_nlm_rst_cell, parOp, poolSize)
             % To speed up reconstructions we can precompute and save the Zernike
@@ -1446,7 +1403,7 @@ classdef ZC < handle
             dists = sqrt( x_ptsMesh.^2 + y_ptsMesh.^2 + z_ptsMesh.^2);
             
             withinBall = dists<1;
-            withinBall_tot = sum(sum(sum(withinBall)));
+            withinBall_tot = sum(withinBall(:));
             
             fprintf('\nNumber of Zernike polynomials to compute within unit ball: %5.0f', sum( sum( sum(withinBall) ) ) );
             
