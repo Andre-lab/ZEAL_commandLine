@@ -506,7 +506,6 @@ classdef molShape < handle
                     if (element_i=='C') || (element_i=='N')  || (element_i=='O') || (element_i=='S') || (element_i=='X')
                         
                         count = count + 1;
-                        %
                         atomList(count,1) = Xcrds(i)-COM(1);
                         atomList(count,2) = Ycrds(i)-COM(2);
                         atomList(count,3) = Zcrds(i)-COM(3);
@@ -519,7 +518,7 @@ classdef molShape < handle
                         switch element_code
                             
                             case 2 % C
-                                atomList(count,6) = vdwRadii(2);                                
+                                atomList(count,6) = vdwRadii(2);
                             case 3 % N
                                 atomList(count,6) = vdwRadii(3);
                             case 4 % O
