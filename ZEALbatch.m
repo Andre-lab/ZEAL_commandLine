@@ -136,6 +136,8 @@ classdef ZEALbatch
             fix_descriptors = zeros(obj.Batch.N, nInvariants);
             rot_descriptors = zeros(obj.Batch.N, nInvariants);
             
+           
+            
             if keepMoments
                 fix_moments = zeros(obj.Batch.N, nMoments);
                 rot_moments = zeros(obj.Batch.N, nMoments);              
@@ -160,7 +162,7 @@ classdef ZEALbatch
                 
                 N = obj.Batch.N;
                 errors = 0;
-                
+                           
                 if obj.AlignMode % ALIGN MODE
                     
                     fix = obj.Batch.Fixed;
@@ -171,7 +173,7 @@ classdef ZEALbatch
                         % D = parallel.pool.DataQueue;
                         % afterEach(D, @updateParStatus);
                         % parCount = 1;
-                        
+                                                                        
                         parfor i = 1:obj.Batch.N
                             
                             try
@@ -216,7 +218,7 @@ classdef ZEALbatch
                             end
                             
                         end
-                        
+                                                
                     else % parOp false
                         
                         for i = 1:N
@@ -376,7 +378,7 @@ classdef ZEALbatch
                 warning(ME.message);
                 
             end
-            
+
             obj.Results.Errors = errors;
             obj.Results.ComputationTime = toc(startTime);
             
